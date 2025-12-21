@@ -1,0 +1,9 @@
+[submodule "dependencies/yyjson"]
+	path = dependencies/yyjson
+	url = https://github.com/ibireme/yyjson.git
+[submodule "dependencies/jwt"]
+	path = dependencies/jwt
+	url = https://github.com/Thalhammer/jwt-cpp.git
+[submodule "dependencies/httplib"]
+	path = dependencies/httplib
+	url = https://github.com/yhirose/cpp-httplib.git
