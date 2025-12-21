@@ -52,7 +52,7 @@ namespace utils
 
     /******************************************************************************************************************/
 
-    int internetGet(const std::string &host, const std::string &path, std::wstring &content,
+    int internetGet(const std::string &host, const std::string &path, std::string &content,
                     httplib::Headers headers /* = httplib::Headers */) {
         content.clear();
 
@@ -62,7 +62,7 @@ namespace utils
         if (res) {
             if (res->status == 404) return res->status;
 
-            content = multiByte2WideChar(res->body.c_str());
+            content = std::move(res->body);
             return res->status;
         } else {
             Logger::instance().error(
