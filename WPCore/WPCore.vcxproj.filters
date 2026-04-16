@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="yyjson">
+      <UniqueIdentifier>{d411af3b-8991-42c4-abb1-6c19882743d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Logger.h">
@@ -27,6 +30,18 @@
     <ClInclude Include="utils.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AppLocale.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dependencies\yyjson\src\yyjson.h">
+      <Filter>yyjson</Filter>
+    </ClInclude>
+    <ClInclude Include="DataProviderSpiderWeatherComCn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DataProviderOpenWeather.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Logger.cpp">
@@ -36,6 +51,18 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="utils.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AppLocale.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dependencies\yyjson\src\yyjson.c">
+      <Filter>yyjson</Filter>
+    </ClCompile>
+    <ClCompile Include="DataProviderSpiderWeatherComCn.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DataProviderOpenWeather.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

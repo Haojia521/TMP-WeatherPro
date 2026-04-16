@@ -13,31 +13,31 @@ public:
 
     enum class Level
     {
-        INFO,
-        ERROR,
+        LV_INFO,
+        LV_ERROR,
     };
 
     struct LogEntry
     {
         Level level;
         std::chrono::system_clock::time_point timestamp;
-        std::wstring message;
+        std::string message;
     };
 
     static Logger& instance();
 
-    void info(std::wstring msg);
-    void error(std::wstring msg);
+    void info(std::string msg);
+    void error(std::string msg);
 
     std::vector<LogEntry> snapshot() const;
-    std::vector<std::wstring> formattedSnapshot() const;
+    //std::vector<std::wstring> formattedSnapshot() const;
 
     void clear();
 
 private:
     Logger() = default;
 
-    void log(Level level, std::wstring msg);
+    void log(Level level, std::string msg);
 
     mutable std::mutex mutex_;
     std::array<LogEntry, MAXLOGS> buffer_{};

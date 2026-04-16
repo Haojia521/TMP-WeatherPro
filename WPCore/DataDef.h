@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <bitset>
 
 enum class WeatherTimeliness
 {
@@ -24,29 +23,34 @@ enum class WeatherContent
     AIR_PM2P5,
     AIR_PM10,
     UV_INDEX,
+    ALERTS,
+    PRECIPITATION,
 };
 
 struct Location
 {
-    std::wstring id;
-    std::wstring name;
-    std::wstring administrative_ownership;
-    std::wstring longitude;
-    std::wstring latitude;
+    std::string id;
+    std::string name;
+    std::string administrative_ownership;
+    std::string longitude;
+    std::string latitude;
 };
 
-using Locaitons = std::vector<Location>;
+using Locations = std::vector<Location>;
 
 class DataProvider
 {
 public:
     virtual ~DataProvider() = default;
 
-    virtual bool queryLocations(const std::wstring &query, Locaitons &queriedLocations) = 0;
-    virtual bool update() = 0;
+    virtual bool autoLocating(Location &loc) const { return false; }
+    virtual bool geocodingDirect(const std::string &query, Locations &queried_locations) const = 0;
+    virtual bool geocodingReverse(const std::string &latitude, const std::string &longitude,
+                                  Locations &queried_locations) const = 0;
+    virtual bool fetchWeatherData(const Location &loc) = 0;
 
-    virtual std::wstring getWeatherSummary() = 0;
-    virtual std::wstring getWeatherContent(WeatherTimeliness wt, WeatherContent wc) = 0;
+    virtual std::string getWeatherSummary() const = 0;
+    virtual std::string getWeatherContent(WeatherTimeliness wt, WeatherContent wc) const = 0;
 };
 
 using DataProviderPtr = std::shared_ptr<DataProvider>;

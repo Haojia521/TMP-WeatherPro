@@ -120,10 +120,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_LIB;NOMINMAX;CPPHTTPLIB_OPENSSL_SUPPORT;CPPHTTPLIB_ZLIB_SUPPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_LIB;WIN32_LEAN_AND_MEAN;NOMINMAX;CPPHTTPLIB_OPENSSL_SUPPORT;CPPHTTPLIB_ZLIB_SUPPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)..\dependencies\yyjson\src\;$(ProjectDir)..\dependencies\jwt\include\;$(ProjectDir)..\dependencies\httplib\;$(VCPKG_HOME)\installed\x64-windows-static\include\;$(OPENSSL_30)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -161,13 +162,21 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\dependencies\yyjson\src\yyjson.c" />
+    <ClCompile Include="DataProviderOpenWeather.cpp" />
     <ClCompile Include="DataProviderQWeather.cpp" />
+    <ClCompile Include="AppLocale.cpp" />
+    <ClCompile Include="DataProviderSpiderWeatherComCn.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dependencies\yyjson\src\yyjson.h" />
     <ClInclude Include="DataDef.h" />
+    <ClInclude Include="DataProviderOpenWeather.h" />
     <ClInclude Include="DataProviderQWeather.h" />
+    <ClInclude Include="AppLocale.h" />
+    <ClInclude Include="DataProviderSpiderWeatherComCn.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
