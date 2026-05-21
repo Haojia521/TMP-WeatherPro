@@ -1,15 +1,27 @@
 ﻿#pragma once
 
 #include <string>
+#include <map>
 #include <unordered_map>
 
 namespace utils
 {
-    std::wstring multiByte2WideChar(const char *str, bool from_utf8 = true);
-    std::string wideChar2MultiByte(const wchar_t *str, bool to_utf8 = true);
+    struct HttpParams
+    {
+        std::unordered_map<std::string, std::string> data;
+    };
+
+    struct HttpHeaders
+    {
+        std::unordered_map<std::string, std::string> data;
+    };
 
     int internetGet(const std::string &host, const std::string &path, std::string &content,
-                    std::unordered_map<std::string, std::string> headers = {});
+                    const HttpParams &params = {}, const HttpHeaders &headers = {});
+
+    int internetGetWithRetry(const std::string &host, const std::string &path, std::string &content,
+                             const HttpParams &params = {}, const HttpHeaders &headers = {},
+                             int retry_times = 3);
 
     std::tuple<std::string, std::string> generateEd25519Keypair();
 

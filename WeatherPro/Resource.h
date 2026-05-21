@@ -1,16 +1,147 @@
 ﻿//{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
+// Microsoft Visual C++ 生成的包含文件。
 // 供 WeatherPro.rc 使用
 //
+#define IDS_WEATHER_PRO                 1000
+#define IDC_COMBO_DATA_SOURCE           1000
+#define IDC_STATIC_CURRENT_LOCATION     1001
+#define IDS_API_WCC                     1001
+#define IDB_PNG_ICONS_WCC               1002
+#define IDC_COMBO_WEATHER_TYPE          1002
+#define IDS_API_QW                      1002
+#define IDC_COMBO_UPDATE_INTERVAL       1003
+#define IDS_API_OW                      1003
+#define IDC_BUTTON_OPEN_API_SETTINGS    1004
+#define IDS_WEATHER_REALTIME            1004
+#define IDB_PNG_QW_FILL                 1005
+#define IDC_BUTTON_SET_LOCATION         1005
+#define IDS_WEATHER_IN_24HS             1005
+#define IDB_PNG_QW_HOLLOW               1006
+#define IDC_CHECK_SHOW_INFO_IN_TOOLTIP  1006
+#define IDS_WEATHER_IN_24_48HS          1006
+#define IDB_PNG_OW                      1007
+#define IDC_CHECK_DRAW_ICON             1007
+#define IDS_WEATHER_IN_48_72HS          1007
+#define IDD_DLG_SETTINGS                1008
+#define IDC_RADIO_LDC_ACT_OPEN_SETTINGS 1008
+#define IDS_UPDATE_INTERVAL_05MIN       1008
+#define IDC_RADIO_LDC_ACT_UPDATE        1009
+#define IDS_UPDATE_INTERVAL_15MIN       1009
+#define IDS_UPDATE_INTERVAL_30MIN       1010
+#define IDD_DLG_SET_LOCTION             1010
+#define IDC_RADIO_QUERY_BY_TEXT         1010
+#define IDS_UPDATE_INTERVAL_60MIN       1011
+#define IDC_RADIO_QUERY_BY_COORD        1011
+#define IDS_UPDATE_INTERVAL_120MIN      1012
+#define IDC_EDIT_QUERY_TEXT             1012
+#define IDB_PNG_LOADING                 1012
+#define IDC_EDIT_QUERY_LON              1013
+#define IDS_TMP_INVALID_LON_VALUE       1013
+#define IDD_DLG_OPTIONS_WCC             1013
+#define IDC_EDIT_QUERY_LAT              1014
+#define IDS_TMP_INVALID_LAT_VALUE       1014
+#define IDC_LIST_LOCATIONS              1015
+#define IDS_LOCATION_NAME               1015
+#define IDD_DLG_OPTIONS_QW              1015
+#define IDC_BUTTON_DO_QUERY             1016
+#define IDS_LOCATION_ID                 1016
+#define IDC_STATIC_LON                  1017
+#define IDS_LOCATION_AO                 1017
+#define IDD_DLG_OPTIONS_OW              1017
+#define IDC_STATIC_LAT                  1018
+#define IDS_UPDATING                    1018
+#define IDC_CHECK_AUTO_LOCATING         1019
+#define IDS_WCC_ICON_BLUE               1019
+#define IDD_DLG_TEXT_VIEWER             1019
+#define IDC_COMBO_ICON_STYLE            1020
+#define IDS_WCC_ICON_WHITE              1020
+#define IDC_CHECK_USE_API_LOCATION      1021
+#define IDS_QW_ICON_FILL                1021
+#define IDD_DLG_SETTINGS_AUTO_LOC       1021
+#define IDC_EDIT_API_HOST               1022
+#define IDS_QW_ICON_HOLLOW              1022
+#define IDC_RADIO_AUTH_BY_KEY           1023
+#define IDS_OPT_QW_SSH_KEYS_EXIST       1023
+#define IDB_BITMAP_QR_ALIPAY            1023
+#define IDC_RADIO_AUTH_BY_JWT           1024
+#define IDS_OPT_QW_CREATE_KEY_FILE_FAILED 1024
+#define IDB_BITMAP_QR_WECHAT            1024
+#define IDC_EDIT_APP_KEY                1025
+#define IDS_OPT_QW_KEY_FILES_NOT_FOUND  1025
+#define IDD_DLG_DONATE                  1025
+#define IDC_EDIT_JWT_PROJ_ID            1026
+#define IDS_OPT_QW_PUB_KEY_COPIED       1026
+#define IDC_EDIT_JWT_CRED_ID            1027
+#define IDS_OPT_QW_COPY_PUB_KEY_FAILED  1027
+#define IDD_DLG_SETTINGS_PINNED_ITEM    1027
+#define IDC_STATIC_JWT_PUB_KEY_FILEPATH 1028
+#define IDS_OPT_QW_OPEN_PUB_KEY_FAILED  1028
+#define IDC_STATIC_JWT_PRV_KEY_FILEPATH 1029
+#define IDS_UNITS_STANDARD              1029
+#define IDC_BUTTON_CREATE_KEY_PAIR      1030
+#define IDS_UNITS_METRIC                1030
+#define IDC_BUTTON_SELECT_KEY_PAIR      1031
+#define IDS_UNITS_IMPERIAL              1031
+#define IDC_BUTTON_COPY_PUB_KEY         1032
+#define IDS_WND_TITLE_LOGGER_MSG        1032
+#define IDC_CHECK_SHOW_TEMP_FEELS_LIKE  1033
+#define IDS_WND_TITLE_ALERT_MSG         1033
+#define IDC_CHECK_SHOW_HUM              1034
+#define IDS_TS_TODAY                    1034
+#define IDC_CHECK_SHOW_WIND             1035
+#define IDS_TS_TOMORROW                 1035
+#define IDC_CHECK_USE_WIND_SCALE        1036
+#define IDS_TS_DAY_AFT_TOM              1036
+#define IDC_CHECK_SHOW_PM2P5            1037
+#define IDS_WI_TEMPERATURE              1037
+#define IDC_CHECK_SHOW_PM10             1038
+#define IDS_WI_WEATHER                  1038
+#define IDC_CHECK_FC_SHOW_HUM           1039
+#define IDS_WI_HUMIDITY                 1039
+#define IDC_CHECK_FC_SHOW_UVI           1040
+#define IDS_WI_WIND                     1040
+#define IDS_WI_AIR_QUALITY              1041
+#define IDC_EDIT_API_KEY                1042
+#define IDS_WI_AIR_PM2P5                1042
+#define IDC_COMBO_UNIT_TYPE             1043
+#define IDS_WI_AIR_PM10                 1043
+#define IDC_CHECK_USE_ONECALL           1044
+#define IDS_WI_UVI                      1044
+#define IDC_EDIT_TEXT                   1045
+#define IDS_WI_PRECIPITATION            1045
+#define IDC_BUTTON_CHECK_ERROR_MSG      1046
+#define IDS_TS_REALTIME                 1046
+#define IDC_BUTTON_CHECK_ALERT_MSG      1047
+#define IDS_TIME_SLOT                   1047
+#define IDC_BUTTON_UPDATE_MANUALLY      1048
+#define IDS_DATA_ITEM                   1048
+#define IDC_BUTTON_AUTO_LOC_OPTIONS     1049
+#define IDS_WP_DESCRIPTION              1049
+#define IDC_CHECK_LOC_SRC_API           1050
+#define IDS_NEW_VERSION_RELEASED        1050
+#define IDC_CHECK_LOC_SRC_OS            1051
+#define IDS_NEW_VERSION_DESCRIPTION     1051
+#define IDC_CHECK_LOC_SRC_IP_GEO        1052
+#define IDC_CHECK_LOC_SRC_IP_RGN_NAME   1053
+#define IDC_CHECK_DRAW_ALERTS_NOTIFICATION_DOT 1054
+#define IDC_BUTTON_DONATE               1056
+#define IDC_COMBO_TIME_SLOT             1058
+#define IDC_COMBO_WEATHER_ITEM          1059
+#define IDC_LIST_PINNED_ITEM_KEYS       1061
+#define IDC_BUTTON_ADD_KEY              1062
+#define IDC_BUTTON_REMOVE_KEY           1063
+#define IDC_BUTTON_CLEAR_KEYS           1064
+#define IDC_BUTTON_SET_PINNED_ITEMS     1065
+#define IDC_BUTTON_VERSION              1067
+#define IDC_BUTTON1                     1068
 
-// 新对象的下一组默认值
-//
+// Next default values for new objects
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-
-#define _APS_NEXT_RESOURCE_VALUE	1000
-#define _APS_NEXT_CONTROL_VALUE		1000
-#define _APS_NEXT_SYMED_VALUE		1000
-#define _APS_NEXT_COMMAND_VALUE		32771
+#define _APS_NEXT_RESOURCE_VALUE        1029
+#define _APS_NEXT_COMMAND_VALUE         32771
+#define _APS_NEXT_CONTROL_VALUE         1069
+#define _APS_NEXT_SYMED_VALUE           1000
 #endif
 #endif

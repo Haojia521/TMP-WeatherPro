@@ -3,32 +3,36 @@
 #include "DataDef.h"
 
 #include <array>
+#include <functional>
 
 class DataProviderQWeather : public DataProvider
 {
 public:
-    struct Config
+    struct ConfigApp
     {
         std::string app_key;
-
         std::string api_host;
         std::string project_id;
         std::string credential_id;
         std::string jwt_pub_key_file;
         std::string jwt_prv_key_file;
-
         bool enable_jwt{ false };
 
+        bool operator==(const ConfigApp&) const = default;
+    };
+
+    struct ConfigFormatting
+    {
         bool show_realtime_temp_feels_like{ false };
         bool show_realtime_wind{ true };
         bool show_realtime_wind_scale{ true };
         bool show_realtime_humidity{ true };
-
+        bool show_realtime_pm2p5{ true };
+        bool show_realtime_pm10{ false };
         bool show_forecasted_uv_index{ false };
         bool show_forecasted_humidity{ false };
 
-        bool show_realtime_pm2p5{ true };
-        bool show_realtime_pm10{ false };
+        bool operator==(const ConfigFormatting&) const = default;
     };
 
     struct RealtimeWeather
@@ -90,20 +94,29 @@ public:
         std::vector<std::string> attributions;
     };
 
+    struct WeatherDataBlock : WeatherData
+    {
+        explicit WeatherDataBlock(const ConfigFormatting &cfg_fmt);
+
+        [[nodiscard]] std::string getWeatherSummary() const override;
+        [[nodiscard]] std::string getWeatherItem(WeatherTimeSlot time_slot, WeatherItem item) const override;
+
+        RealtimeWeather realtime_weather;
+        RealtimeAirQuality realtime_air_quality;
+        std::array<ForecastedWeather, 3> fc_weather_3d;
+        RealtimeWeatherAlerts weather_alerts;
+
+        std::reference_wrapper<const ConfigFormatting> config;
+    };
+
     bool geocodingDirect(const std::string &query, Locations &queried_locations) const override;
     bool geocodingReverse(const std::string &latitude, const std::string &longitude, Locations &queried_locations) const override;
-    bool fetchWeatherData(const Location &loc) override;
 
-    std::string getWeatherSummary() const override;
-    std::string getWeatherContent(WeatherTimeliness wt, WeatherContent wc) const override;
+    [[nodiscard]] WeatherDataCPtr getWeatherData(const Location &loc) const override;
 
-    Config config_;
-    bool validateApiAuthentication() const;
-
-
-    RealtimeWeather realtime_weather_;
-    RealtimeAirQuality realtime_air_quality_;
-    std::array<ForecastedWeather, 3> fc_weather_3d_;
-    RealtimeWeatherAlerts weather_alerts_;
+    ConfigApp config_app;
+    ConfigFormatting config_fmt;
+    
 protected:
+    [[nodiscard]] bool validateApiAuthentication() const;
 };

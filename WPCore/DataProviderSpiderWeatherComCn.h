@@ -42,15 +42,26 @@ public:
 
     using WeatherAlerts = std::vector<WeatherAlert>;
 
+    struct Config
+    {
+        bool use_provider_location{ true };
+    };
+
+    struct WeatherDataBlock : WeatherData
+    {
+        [[nodiscard]] std::string getWeatherSummary() const override;
+        [[nodiscard]] std::string getWeatherItem(WeatherTimeSlot time_slot, WeatherItem item) const override;
+
+        RealtimeWeather realtime_weather;
+        std::array<ForecastedWeather, 3> fc_weather_3d;
+        WeatherAlerts weather_alerts;
+    };
+
     bool autoLocating(Location &loc) const override;
     bool geocodingDirect(const std::string &query, Locations &queried_locations) const override;
     bool geocodingReverse(const std::string &latitude, const std::string &longitude, Locations &queried_locations) const override;
-    bool fetchWeatherData(const Location &loc) override;
 
-    std::string getWeatherSummary() const override;
-    std::string getWeatherContent(WeatherTimeliness wt, WeatherContent wc) const override;
+    [[nodiscard]] WeatherDataCPtr getWeatherData(const Location &loc) const override;
 
-    RealtimeWeather realtime_weather_;
-    std::array<ForecastedWeather, 3> fc_weather_3d_;
-    WeatherAlerts weather_alerts_;
+    Config config;
 };

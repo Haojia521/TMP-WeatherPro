@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -76,7 +76,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(ProjectDir)..\bin\$(Platform)\$(Configuration)\plugins\</OutDir>
+    <OutDir>$(SolutionDir)\bin\$(Platform)\$(Configuration)\plugins\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -97,13 +97,17 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_WINDOWS;_DEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;_USRDLL;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\;$(ProjectDir)..\dependencies;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <ModuleDefinitionFile>.\WeatherPro.def</ModuleDefinitionFile>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\lib\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>gdiplus.lib;WPCore.lib;windowsapp.lib;Version.lib</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -172,7 +176,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_WINDOWS;NDEBUG;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;NDEBUG;_USRDLL;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
@@ -193,12 +197,30 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ApiCollections.cpp" />
+    <ClCompile Include="AutoLocSettingsDlg.cpp" />
+    <ClCompile Include="Common.cpp" />
+    <ClCompile Include="DataManager.cpp" />
+    <ClCompile Include="EditCtrlFloatNumber.cpp" />
+    <ClCompile Include="IconResources.cpp" />
+    <ClCompile Include="MainItem.cpp" />
+    <ClCompile Include="MainSettingsDlg.cpp" />
+    <ClCompile Include="OptionsOwDlg.cpp" />
+    <ClCompile Include="OptionsQwDlg.cpp" />
+    <ClCompile Include="OptionsWccDlg.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="PinnedItem.cpp" />
+    <ClCompile Include="PinnedItemSettingsDlg.cpp" />
+    <ClCompile Include="SetLocationDlg.cpp" />
+    <ClCompile Include="TextViewerDlg.cpp" />
+    <ClCompile Include="WeatherApiOpenWeather.cpp" />
+    <ClCompile Include="WeatherApiQWeather.cpp" />
+    <ClCompile Include="WeatherApiWCCS.cpp" />
     <ClCompile Include="WeatherPro.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -206,14 +228,45 @@
     <None Include="WeatherPro.def" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ApiCollections.h" />
+    <ClInclude Include="AutoLocSettingsDlg.h" />
+    <ClInclude Include="Common.h" />
+    <ClInclude Include="DataManager.h" />
+    <ClInclude Include="EditCtrlFloatNumber.h" />
+    <ClInclude Include="MainSettingsDlg.h" />
+    <ClInclude Include="OptionsOwDlg.h" />
+    <ClInclude Include="OptionsQwDlg.h" />
+    <ClInclude Include="OptionsWccDlg.h" />
+    <ClInclude Include="PinnedItem.h" />
+    <ClInclude Include="PinnedItemSettingsDlg.h" />
+    <ClInclude Include="SetLocationDlg.h" />
+    <ClInclude Include="TextViewerDlg.h" />
+    <ClInclude Include="WeatherApiOpenWeather.h" />
+    <ClInclude Include="WeatherApiQWeather.h" />
+    <ClInclude Include="WeatherAPI.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="IconResources.h" />
+    <ClInclude Include="MainItem.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Types.h" />
+    <ClInclude Include="WeatherApiWCCS.h" />
     <ClInclude Include="WeatherPro.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WeatherPro.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\icons-qw-fill-32x32.png" />
+    <Image Include="res\icons-qw-hollow-32x32.png" />
+    <Image Include="res\icons-wcc-32x32.png" />
+    <Image Include="res\loading-frames-16.png" />
+    <Image Include="res\ow-32.png" />
+    <Image Include="res\QR_AliPay.bmp" />
+    <Image Include="res\QR_WeChat.bmp" />
+    <Image Include="res\qw-fill-32.png" />
+    <Image Include="res\qw-hollow-32.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

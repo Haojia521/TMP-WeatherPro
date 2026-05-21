@@ -65,5 +65,8 @@
     <ClCompile Include="DataProviderOpenWeather.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="DataDef.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

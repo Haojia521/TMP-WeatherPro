@@ -36,7 +36,7 @@ public:
         std::string precipitation_snow_1h;
         std::string update_time;
 
-        UnitType unit_type;
+        UnitType unit_type{ UnitType::Metric };
     };
 
     struct RealtimeAirQuality
@@ -61,7 +61,7 @@ public:
         std::string precipitation_snow;
         std::string precipitation_probability;
 
-        UnitType unit_type;
+        UnitType unit_type{ UnitType::Metric };
     };
 
     struct WeatherAlert
@@ -75,20 +75,24 @@ public:
 
     using WeatherAlerts = std::vector<WeatherAlert>;
 
+    struct WeatherDataBlock : WeatherData
+    {
+        [[nodiscard]] std::string getWeatherSummary() const override;
+        [[nodiscard]] std::string getWeatherItem(WeatherTimeSlot time_slot, WeatherItem item) const override;
+
+        RealtimeWeather realtime_weather;
+        RealtimeAirQuality realtime_air;
+        std::array<ForecastedWeather, 3> fc_weather_3d;
+        WeatherAlerts alerts;
+    };
+
     bool geocodingDirect(const std::string &query, Locations &queried_locations) const override;
     bool geocodingReverse(const std::string &latitude, const std::string &longitude, Locations &queried_locations) const override;
 
-    bool fetchWeatherData(const Location &loc) override;
+    [[nodiscard]] WeatherDataCPtr getWeatherData(const Location &loc) const override;
 
-    std::string getWeatherSummary() const override;
-    std::string getWeatherContent(WeatherTimeliness wt, WeatherContent wc) const override;
+    Config config;
 
-    bool validateApiAuthentication() const;
-
-    Config config_;
-
-    RealtimeWeather realtime_weather_;
-    RealtimeAirQuality realtime_air_;
-    std::array<ForecastedWeather, 3> fc_weather_3d_;
-    WeatherAlerts alerts_;
+protected:
+    [[nodiscard]] bool validateApiAuthentication() const;
 };

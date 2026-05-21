@@ -9,7 +9,7 @@
 class Logger
 {
 public:
-    static constexpr std::size_t MAXLOGS = 50;
+    static constexpr std::size_t MAXLOGS = 200;
 
     enum class Level
     {
@@ -21,16 +21,17 @@ public:
     {
         Level level;
         std::chrono::system_clock::time_point timestamp;
+        uint64_t thread_id;
         std::string message;
     };
 
     static Logger& instance();
 
-    void info(std::string msg);
-    void error(std::string msg);
+    void info(std::string_view msg);
+    void error(std::string_view msg);
 
     std::vector<LogEntry> snapshot() const;
-    //std::vector<std::wstring> formattedSnapshot() const;
+    std::vector<std::string> formattedSnapshot() const;
 
     void clear();
 

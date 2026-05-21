@@ -163,6 +163,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\dependencies\yyjson\src\yyjson.c" />
+    <ClCompile Include="DataDef.cpp" />
     <ClCompile Include="DataProviderOpenWeather.cpp" />
     <ClCompile Include="DataProviderQWeather.cpp" />
     <ClCompile Include="AppLocale.cpp" />

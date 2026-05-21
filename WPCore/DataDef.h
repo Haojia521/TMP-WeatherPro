@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-enum class WeatherTimeliness
+enum class WeatherTimeSlot
 {
     REALTIME,
     TODAY,
@@ -12,7 +12,7 @@ enum class WeatherTimeliness
     DAY_AFTER_TOMMROW,
 };
 
-enum class WeatherContent
+enum class WeatherItem
 {
     TEMPERATURE,
     WEATHER_TEXT,
@@ -27,6 +27,16 @@ enum class WeatherContent
     PRECIPITATION,
 };
 
+struct WeatherData
+{
+    virtual ~WeatherData() = default;
+
+    [[nodiscard]] virtual std::string getWeatherSummary() const = 0;
+    [[nodiscard]] virtual std::string getWeatherItem(WeatherTimeSlot time_slot, WeatherItem item) const = 0;
+};
+
+using WeatherDataCPtr = std::shared_ptr<const WeatherData>;
+
 struct Location
 {
     std::string id;
@@ -34,6 +44,10 @@ struct Location
     std::string administrative_ownership;
     std::string longitude;
     std::string latitude;
+
+    std::string getFormattedString() const;
+
+    bool operator==(const Location&) const = default;
 };
 
 using Locations = std::vector<Location>;
@@ -47,10 +61,9 @@ public:
     virtual bool geocodingDirect(const std::string &query, Locations &queried_locations) const = 0;
     virtual bool geocodingReverse(const std::string &latitude, const std::string &longitude,
                                   Locations &queried_locations) const = 0;
-    virtual bool fetchWeatherData(const Location &loc) = 0;
 
-    virtual std::string getWeatherSummary() const = 0;
-    virtual std::string getWeatherContent(WeatherTimeliness wt, WeatherContent wc) const = 0;
+    [[nodiscard]] virtual WeatherDataCPtr getWeatherData(const Location &loc) const = 0;
 };
 
 using DataProviderPtr = std::shared_ptr<DataProvider>;
+using DataProviderCPter = std::shared_ptr<const DataProvider>;

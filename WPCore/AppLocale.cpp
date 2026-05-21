@@ -1,106 +1,137 @@
 ﻿#include "AppLocale.h"
 
-namespace tr
+#include <array>
+#include <unordered_map>
+
+namespace
 {
-    static Locale enabled_locale{ Locale::CHINESE_S };
-    static std::unordered_map<Locale, std::unordered_map<TextID, std::string>> text_table;
+    using namespace tr;
 
-    void init() {
-        static bool flag{ false };
+    auto enabled_locale{ Locale::CHINESE_S };
 
-        if (flag) {
-            return;
+    struct LocaleTextItem
+    {
+        TID tid;
+        std::string_view text;
+    };
+
+    // the order of the items must be consistent with the order of the TID enumeration values
+    constexpr std::array<LocaleTextItem, static_cast<size_t>(TID::COUNT)> TEXT_TABLE_ZH_S = std::to_array<LocaleTextItem>(
+        {
+            {.tid = TID::LC_OPENWEATHER, .text = "zh_cn"},
+            {.tid = TID::LC_QWEATHER, .text = "zh-hans"},
+
+            {.tid = TID::FMT_AIR_QUALITY, .text = "空气质量"},
+            {.tid = TID::FMT_DAT_AFTER_TOMORROW, .text = "后日"},
+            {.tid = TID::FMT_HUMIDITY, .text = "湿度"},
+            {.tid = TID::FMT_TODAY, .text = "今日"},
+            {.tid = TID::FMT_TOMORROW, .text = "明日"},
+            {.tid = TID::FMT_UVI, .text = "UV指数"},
+
+            {.tid = TID::FMT_TMP_WIND_DIRECTION, .text = "{}"},
+            {.tid = TID::FMT_TMP_WIND_SCALE, .text = "{}级"},
+
+            {.tid = TID::ERR_AUTH_NO_API_HOST, .text = "缺失API host"},
+            {.tid = TID::ERR_AUTH_NO_APP_KEY, .text = "缺失API key"},
+            {.tid = TID::ERR_AUTH_JWT_NO_PROJ_ID, .text = "缺失项目ID"},
+            {.tid = TID::ERR_AUTH_JWT_NO_CRED_ID, .text = "缺失JWT凭据ID"},
+            {.tid = TID::ERR_CODE, .text = "错误代码"},
+            {.tid = TID::ERR_EXTRACT_DATA_FAILED, .text = "提取数据失败"},
+            {.tid = TID::ERR_GEN_KEYPAIR_FAILED, .text = "创建密钥对失败"},
+            {.tid = TID::ERR_INTERNET_EMPTY_RESPONSE, .text = "服务器没有返回内容"},
+            {.tid = TID::ERR_INVALID_JSON, .text = "解析Json内容失败"},
+            {.tid = TID::ERR_JWT_CANNOT_OPEN_PRV_FILE, .text = "无法打开私有密钥文件"},
+            {.tid = TID::ERR_NO_LONG_LAT, .text = "缺失经纬度坐标"},
+            {.tid = TID::ERR_PARSING_JSON_FAILED, .text = "解析Json内容失败"},
+            {.tid = TID::ERR_QUERY_FCW3D_FAILED, .text = "查询3天预报天气失败"},
+            {.tid = TID::ERR_QUERY_GEOCODING_FAILED, .text = "查询地理位置失败"},
+            {.tid = TID::ERR_QUERY_ONECALL_FAILED, .text = "OneCall查询失败"},
+            {.tid = TID::ERR_QUERY_RTAQ_FAILED, .text = "查询实时空气质量失败"},
+            {.tid = TID::ERR_QUERY_RTW_FAILED, .text = "查询实时天气失败"},
+            {.tid = TID::ERR_QUERY_RTWA_FAILED, .text = "查询天气预警失败"},
+            {.tid = TID::ERR_UNKOWN, .text = "未知错误"},
+        });
+
+    // the order of the items must be consistent with the order of the TID enumeration values
+    constexpr std::array<LocaleTextItem, static_cast<size_t>(TID::COUNT)> TEXT_TABLE_EN = std::to_array<LocaleTextItem>(
+        {
+            {.tid = TID::LC_OPENWEATHER, .text = "en"},
+            {.tid = TID::LC_QWEATHER, .text = "en"},
+
+            {.tid = TID::FMT_AIR_QUALITY, .text = "AQ"},
+            {.tid = TID::FMT_DAT_AFTER_TOMORROW, .text = "DAT"},
+            {.tid = TID::FMT_HUMIDITY, .text = "HUM"},
+            {.tid = TID::FMT_TODAY, .text = "TOD"},
+            {.tid = TID::FMT_TOMORROW, .text = "TMR"},
+            {.tid = TID::FMT_UVI, .text = "UVI"},
+
+            {.tid = TID::FMT_TMP_WIND_DIRECTION, .text = "Wind: {}"},
+            {.tid = TID::FMT_TMP_WIND_SCALE, .text = "LV.{}"},
+
+            {.tid = TID::ERR_AUTH_NO_API_HOST, .text = "No API host"},
+            {.tid = TID::ERR_AUTH_NO_APP_KEY, .text = "No API key"},
+            {.tid = TID::ERR_AUTH_JWT_NO_PROJ_ID, .text = "No project ID"},
+            {.tid = TID::ERR_AUTH_JWT_NO_CRED_ID, .text = "No JWT credential ID"},
+            {.tid = TID::ERR_CODE, .text = "Error code"},
+            {.tid = TID::ERR_EXTRACT_DATA_FAILED, .text = "Failed to extract data from response"},
+            {.tid = TID::ERR_GEN_KEYPAIR_FAILED, .text = "Failed to generate a keypair"},
+            {.tid = TID::ERR_INTERNET_EMPTY_RESPONSE, .text = "No content returned by server"},
+            {.tid = TID::ERR_INVALID_JSON, .text = "Invalid json content"},
+            {.tid = TID::ERR_JWT_CANNOT_OPEN_PRV_FILE, .text = "Failed to open private key file"},
+            {.tid = TID::ERR_NO_LONG_LAT, .text = "No longitude or latitude coordinate"},
+            {.tid = TID::ERR_PARSING_JSON_FAILED, .text = "Invalid json content"},
+            {.tid = TID::ERR_QUERY_FCW3D_FAILED, .text = "Failed to query forecasted weather in 3 days"},
+            {.tid = TID::ERR_QUERY_GEOCODING_FAILED, .text = "Failed to query location information"},
+            {.tid = TID::ERR_QUERY_ONECALL_FAILED, .text = "Failed to query weather by onecall"},
+            {.tid = TID::ERR_QUERY_RTAQ_FAILED, .text = "Failed to query realtime air quality"},
+            {.tid = TID::ERR_QUERY_RTW_FAILED, .text = "Failed to query realtime weather"},
+            {.tid = TID::ERR_QUERY_RTWA_FAILED, .text = "Failed to query weather alerts"},
+            {.tid = TID::ERR_UNKOWN, .text = "Unkown error"},
+        });
+
+    template<size_t N>
+    constexpr bool checkTableTextOrder(const std::array<LocaleTextItem, N> &tab) {
+        for (size_t i = 0; i < N; ++i) {
+            if (static_cast<size_t>(tab[i].tid) != i) {
+                return false;
+            }
         }
 
-        // todo: initialize ...
-        text_table[Locale::CHINESE_S] = {
-            {TextID::LC_OPENWEATHER, "zh_cn"},
-            {TextID::LC_QWEATHER, "zh-hans"},
-
-            {TextID::FMT_AIR_QUALITY, "空气质量"},
-            {TextID::FMT_DAT_AFTER_TOMORROW, "后日"},
-            {TextID::FMT_HUMIDITY, "湿度"},
-            {TextID::FMT_TODAY, "今日"},
-            {TextID::FMT_TOMORROW, "明日"},
-            {TextID::FMT_UVI, "UV指数"},
-
-            {TextID::FMT_TMP_WIND_DIRECTION, "{}"},
-            {TextID::FMT_TMP_WIND_SCALE, "{}级"},
-
-            {TextID::ERR_AUTH_NO_API_HOST, "缺失API host"},
-            {TextID::ERR_AUTH_NO_APP_KEY, "缺失API key"},
-            {TextID::ERR_AUTH_JWT_NO_PROJ_ID, "缺失项目ID"},
-            {TextID::ERR_AUTH_JWT_NO_CRED_ID, "缺失JWT凭据ID"},
-            {TextID::ERR_CODE, "错误代码"},
-            {TextID::ERR_EXTRACT_DATA_FAILED, "提取数据失败"},
-            {TextID::ERR_GEN_KEYPAIR_FAILED, "创建密钥对失败"},
-            {TextID::ERR_INTERNET_EMPTY_RESPONSE, "服务器没有返回内容"},
-            {TextID::ERR_INVALID_JSON, "解析Json内容失败"},
-            {TextID::ERR_JWT_CANNOT_OPEN_PRV_FILE, "无法打开私有密钥文件"},
-            {TextID::ERR_NO_LONG_LAT, "缺失经纬度坐标"},
-            {TextID::ERR_PARSING_JSON_FAILED, "解析Json内容失败"},
-            {TextID::ERR_QUERY_FCW3D_FAILED, "查询3天预报天气失败"},
-            {TextID::ERR_QUERY_GEOCODING_FAILED, "查询地理位置失败"},
-            {TextID::ERR_QUERY_ONECALL_FAILED, "查询OneCall失败"},
-            {TextID::ERR_QUERY_RTAQ_FAILED, "查询实时空气质量失败"},
-            {TextID::ERR_QUERY_RTW_FAILED, "查询实时天气失败"},
-            {TextID::ERR_QUERY_RTWA_FAILED, "查询天气预警失败"},
-            {TextID::ERR_UNKOWN, "未知错误"},
-        };
-
-        text_table[Locale::ENGLISH] = {
-            {TextID::LC_OPENWEATHER, "en"},
-            {TextID::LC_QWEATHER, "en"},
-
-            {TextID::FMT_AIR_QUALITY, "AQ"},
-            {TextID::FMT_DAT_AFTER_TOMORROW, "DAT"},
-            {TextID::FMT_HUMIDITY, "HUM"},
-            {TextID::FMT_TODAY, "TOD"},
-            {TextID::FMT_TOMORROW, "TMR"},
-            {TextID::FMT_UVI, "UVI"},
-
-            {TextID::FMT_TMP_WIND_DIRECTION, "Wind: {}"},
-            {TextID::FMT_TMP_WIND_SCALE, "LV.{}"},
-
-            {TextID::ERR_AUTH_NO_API_HOST, "No API host"},
-            {TextID::ERR_AUTH_NO_APP_KEY, "No API key"},
-            {TextID::ERR_AUTH_JWT_NO_PROJ_ID, "No project ID"},
-            {TextID::ERR_AUTH_JWT_NO_CRED_ID, "No JWT credential ID"},
-            {TextID::ERR_CODE, "Error code"},
-            {TextID::ERR_EXTRACT_DATA_FAILED, "Failed to extract data from response"},
-            {TextID::ERR_GEN_KEYPAIR_FAILED, "Failed to generate a keypair"},
-            {TextID::ERR_INTERNET_EMPTY_RESPONSE, "No content returned by server"},
-            {TextID::ERR_INVALID_JSON, "Invalid json content"},
-            {TextID::ERR_JWT_CANNOT_OPEN_PRV_FILE, "Failed to open private key file"},
-            {TextID::ERR_NO_LONG_LAT, "No longitude or latitude coordinate"},
-            {TextID::ERR_PARSING_JSON_FAILED, "Invalid json content"},
-            {TextID::ERR_QUERY_FCW3D_FAILED, "Failed to query forecasted weather in 3 days"},
-            {TextID::ERR_QUERY_GEOCODING_FAILED, "Failed to query location information"},
-            {TextID::ERR_QUERY_ONECALL_FAILED, "Failed to query weather by onecall"},
-            {TextID::ERR_QUERY_RTAQ_FAILED, "Failed to query realtime air quality"},
-            {TextID::ERR_QUERY_RTW_FAILED, "Failed to query realtime weather"},
-            {TextID::ERR_QUERY_RTWA_FAILED, "Failed to query weather alerts"},
-            {TextID::ERR_UNKOWN, "Unkown error"},
-        };
-
-        flag = true;
+        return true;
     }
 
-    void setLocale(Locale l) {
-        enabled_locale = l;
+    static_assert(checkTableTextOrder(TEXT_TABLE_ZH_S), "TEXT_TABLE_ZH_S: TID does not match index");
+    static_assert(checkTableTextOrder(TEXT_TABLE_EN), "TEXT_TABLE_EN: TID does not match index");
+
+    const auto& getTextTable() {
+        switch (enabled_locale) {
+        case Locale::CHINESE_S:
+            return TEXT_TABLE_ZH_S;
+
+        case Locale::ENGLISH:
+            return TEXT_TABLE_EN;
+        }
+
+        return TEXT_TABLE_EN;
+    }
+}
+
+namespace tr
+{
+    void setLocale(Locale lc) {
+        enabled_locale = lc;
     }
 
-    const std::string& txt(TextID id) {
-        static const std::string missing{ "<missing text>" };
+    Locale getLocale() {
+        return enabled_locale;
+    }
 
-        auto loc_it = text_table.find(enabled_locale);
-        if (loc_it == text_table.end())
-            return missing;
+    std::string_view txt(TID tid) {
+        const auto idx = static_cast<size_t>(tid);
+        if (idx >= static_cast<size_t>(TID::COUNT)) {
+            return "<Unkown TID>";
+        }
 
-        auto text_it = loc_it->second.find(id);
-        if (text_it == loc_it->second.end())
-            return missing;
-
-        return text_it->second;
+        return getTextTable()[idx].text;
     }
 }

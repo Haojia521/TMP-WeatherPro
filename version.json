@@ -1,0 +1,15 @@
+{
+    "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 2
+    },
+    "github": {
+        "url_x86": "",
+        "url_x64": ""
+    },
+    "gitee": {
+        "url_x86": "",
+        "url_x64": ""
+    }
+}

@@ -1,7 +1,6 @@
 ﻿#pragma once
 
-#include <unordered_map>
-#include <string>
+#include <string_view>
 
 namespace tr
 {
@@ -11,7 +10,7 @@ namespace tr
         ENGLISH,
     };
 
-    enum class TextID
+    enum class TID
     {
         LC_OPENWEATHER,
         LC_QWEATHER,
@@ -45,9 +44,11 @@ namespace tr
         ERR_QUERY_RTW_FAILED,
         ERR_QUERY_RTWA_FAILED,
         ERR_UNKOWN,
+
+        COUNT,    // must be the last one, dont use it
     };
 
-    void init();
     void setLocale(Locale);
-    const std::string& txt(TextID);
+    Locale getLocale();
+    std::string_view txt(TID);
 }

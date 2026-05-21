@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Items">
+      <UniqueIdentifier>{d97990ba-a4c2-46b1-b6e3-96a96da9007c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="API">
+      <UniqueIdentifier>{92cb9174-16d7-4d9c-9b47-835affea841d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="DLG">
+      <UniqueIdentifier>{cc7e9c31-e364-4e29-bc9c-b216d0fd3cba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WeatherPro.cpp">
@@ -20,6 +29,60 @@
     </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MainItem.cpp">
+      <Filter>Items</Filter>
+    </ClCompile>
+    <ClCompile Include="IconResources.cpp">
+      <Filter>Items</Filter>
+    </ClCompile>
+    <ClCompile Include="WeatherApiWCCS.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="ApiCollections.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="WeatherApiQWeather.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="Common.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="WeatherApiOpenWeather.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="DataManager.cpp">
+      <Filter>API</Filter>
+    </ClCompile>
+    <ClCompile Include="MainSettingsDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="SetLocationDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="EditCtrlFloatNumber.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="OptionsWccDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="OptionsQwDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="OptionsOwDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="AutoLocSettingsDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewerDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
+    <ClCompile Include="PinnedItem.cpp">
+      <Filter>Items</Filter>
+    </ClCompile>
+    <ClCompile Include="PinnedItemSettingsDlg.cpp">
+      <Filter>DLG</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,10 +109,99 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="MainItem.h">
+      <Filter>Items</Filter>
+    </ClInclude>
+    <ClInclude Include="IconResources.h">
+      <Filter>Items</Filter>
+    </ClInclude>
+    <ClInclude Include="WeatherAPI.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="WeatherApiWCCS.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="ApiCollections.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="WeatherApiQWeather.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="Common.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="WeatherApiOpenWeather.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="DataManager.h">
+      <Filter>API</Filter>
+    </ClInclude>
+    <ClInclude Include="MainSettingsDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="SetLocationDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="EditCtrlFloatNumber.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionsWccDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionsQwDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="OptionsOwDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="AutoLocSettingsDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="TextViewerDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="PinnedItem.h">
+      <Filter>Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Types.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PinnedItemSettingsDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="WeatherPro.rc">
       <Filter>资源文件</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\icons-wcc-32x32.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\icons-qw-fill-32x32.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\icons-qw-hollow-32x32.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\qw-fill-32.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\qw-hollow-32.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ow-32.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\loading-frames-16.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\QR_AliPay.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\QR_WeChat.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
