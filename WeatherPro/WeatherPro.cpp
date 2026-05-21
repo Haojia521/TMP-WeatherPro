@@ -324,8 +324,8 @@ namespace
     }
 
     WpLatestPackage CheckNewVersionFromGithub() {
-        static const std::string url_host{ "http://127.0.0.1:5600" };    // todo: replace the url before release
-        static const std::string url_path{ "/version.json" };
+        static const std::string url_host{ "https://raw.githubusercontent.com" };
+        static const std::string url_path{ "/Haojia521/TMP-WeatherPro/refs/heads/main/version.json" };
 
         auto version_info = FetchWpLatestVersionInfo(url_host, url_path);
         return WpLatestPackage{
@@ -336,8 +336,8 @@ namespace
     }
 
     WpLatestPackage CheckNewVersionFromGitee() {
-        static const std::string url_host{ "http://127.0.0.1:5600" };    // todo: replace the url before release
-        static const std::string url_path{ "/version.json" };
+        static const std::string url_host{ "https://raw.giteeusercontent.com" };
+        static const std::string url_path{ "/Haojia521/TMP-WeatherPro/raw/main/version.json" };
 
         auto version_info = FetchWpLatestVersionInfo(url_host, url_path);
         return WpLatestPackage{
@@ -427,7 +427,7 @@ const wchar_t* WeatherPro::GetInfo(PluginInfoIndex index) {
         case TMI_COPYRIGHT:
             return L"Copyright (C) by Haojia 2025-2026";
         case TMI_URL:
-            return L"https://github.com/Haojia521/TrafficMonitorPlugins";
+            return L"https://github.com/Haojia521/TMP-WeatherPro";
         case TMI_VERSION:
             return str_current_version.c_str();
         case TMI_MAX:
