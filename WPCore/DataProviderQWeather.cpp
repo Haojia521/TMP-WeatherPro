@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <future>
+#include <mutex>
 
 #include <jwt-cpp/jwt.h>
 #include <yyjson.h>
@@ -18,10 +19,14 @@ namespace
     constexpr std::chrono::seconds JWT_TIME_OFFSET{ 30 };
     constexpr std::chrono::seconds JWT_TIME_DURATION{ 900 };
 
+    std::mutex mutex_gen_jwt;
+
     std::string generateJwt(const DataProviderQWeather::ConfigApp &cfg) {
         static std::chrono::system_clock::time_point timestamp;
         static std::string token_cache;
         static std::string prv_filepath_cache;
+
+        std::scoped_lock lock{ mutex_gen_jwt };
 
         const auto now = std::chrono::system_clock::now();
 
