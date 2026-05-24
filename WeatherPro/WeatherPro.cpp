@@ -156,7 +156,8 @@ namespace
     constexpr WORD LANGID_ZH_CN{ MAKELANGID(LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED) };
 
     void SetLanguageId(WORD lang_id) {
-        if (lang_id == 0) {        // 跟随系统
+        if (lang_id == 0 || lang_id == LOCALE_INVARIANT) {
+            // 跟随系统  LOCALE_INVARIANT=127
             SetLanguageId(GetThreadUILanguage());
             return;
         }
