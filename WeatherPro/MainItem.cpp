@@ -194,6 +194,56 @@ namespace
         dc.SelectObject(old_brush);
         dc.SelectObject(old_pen);
     }
+
+    class CBorrowedCDC
+    {
+    public:
+        explicit CBorrowedCDC(HDC hdc)
+            : m_hdc(hdc)
+        {
+            if (m_hdc != nullptr)
+            {
+                m_saved = ::SaveDC(m_hdc);
+                m_dc.Attach(m_hdc);
+            }
+        }
+
+        ~CBorrowedCDC()
+        {
+            if (m_hdc != nullptr && m_saved != 0)
+            {
+                ::RestoreDC(m_hdc, m_saved);
+            }
+
+            if (m_dc.GetSafeHdc() != nullptr)
+            {
+                m_dc.Detach();
+            }
+        }
+
+        CBorrowedCDC(const CBorrowedCDC&) = delete;
+        CBorrowedCDC& operator=(const CBorrowedCDC&) = delete;
+
+        CDC& get()
+        {
+            return m_dc;
+        }
+
+        CDC* get_ptr()
+        {
+            return &m_dc;
+        }
+
+        bool valid() const
+        {
+            return m_hdc != nullptr && m_dc.GetSafeHdc() != nullptr;
+        }
+
+    private:
+        HDC m_hdc{};
+        int m_saved{};
+        CDC m_dc;
+    };
 }
 
 const wchar_t* MainItem::GetItemName() const {
@@ -227,6 +277,42 @@ int MainItem::GetItemWidth() const {
     return 60;
 }
 
+int MainItem::GetItemWidthEx(void* hDC) const {
+    const auto &cfg = DataManager::Instance().GetConfig();
+
+    if (!cfg.main_item_scroll_text) {
+        HDC raw_dc = static_cast<HDC>(hDC);
+        if (raw_dc == nullptr)
+            return 0;
+
+        const auto data_snapshot = DataManager::GetSnapshot();
+        if (data_snapshot == nullptr) {
+            return 0;
+        }
+
+        CString text;
+        int icon_width{ 0 };
+        if (cfg.draw_weather_icon) {
+            icon_width = CalcPixelSize(taskbar_wnd_dpi, 20);
+            text = data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE);
+        } else {
+            text.Format(L"%s %s",
+                        data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::WEATHER_TEXT),
+                        data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE));
+        }
+
+        SIZE size{};
+        if (!::GetTextExtentPoint32(raw_dc, text, text.GetLength(), &size)) {
+            return 0;
+        }
+        auto text_width = size.cx;
+
+        return text_width + icon_width;
+    }
+
+    return 0;
+}
+
 void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
     if (hDC == nullptr || w <= 0 || h <= 0)
         return;
@@ -237,10 +323,7 @@ void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
         return;
     }
 
-    auto raw_dc = static_cast<HDC>(hDC);
-
-    CDC dc;
-    dc.Attach(raw_dc);
+    CBorrowedCDC borrowed_dc{ static_cast<HDC>(hDC) };
 
     CRect rc_text(x, y, x + w, y + h);
 
@@ -263,7 +346,7 @@ void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
                 icon_res != nullptr) {
                 static int loading_frame_idx{ 0 };
                 
-                icon_res->Draw(&dc, rc_icon, loading_frame_idx);
+                icon_res->Draw(borrowed_dc.get_ptr(), rc_icon, loading_frame_idx);
                 loading_frame_idx = (++loading_frame_idx) % icon_res->GetMaxCount();
             }
 
@@ -275,12 +358,12 @@ void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
             if (const auto *icon_res = api.GetWeatherIcons();
                 icon_res != nullptr) {
                 auto weather_code = data_snapshot->GetWeatherData()->getWeatherItem(cfg.time_slot, WeatherItem::WEATHER_CODE);
-                icon_res->Draw(&dc, rc_icon, api.GetWeatherIconIndex(weather_code));
+                icon_res->Draw(borrowed_dc.get_ptr(), rc_icon, api.GetWeatherIconIndex(weather_code));
             }
 
             if (cfg.draw_alerts_notification_dot &&
                 !data_snapshot->GetWeatherData()->getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::ALERTS).empty()) {
-                DrawNotificationDot(dc, rc_icon);
+                DrawNotificationDot(borrowed_dc.get(), rc_icon);
             }
         }
     } else {
@@ -294,10 +377,17 @@ void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
     }
 
     // draw text
-    SetText(text);
-    DrawTextScrolling(dc, rc_text, dark_mode);
-
-    dc.Detach();
+    if (cfg.main_item_scroll_text) {
+        SetText(text);
+        DrawTextScrolling(borrowed_dc.get(), rc_text, dark_mode);
+    } else {
+        SetText(CString{});
+        auto dt_flag = DT_VCENTER;
+        if (text_align_right) {
+            dt_flag |= DT_RIGHT;
+        }
+        borrowed_dc.get().DrawTextW(text, rc_text, dt_flag);
+    }
 }
 
 int MainItem::OnMouseEvent(MouseEventType type, int x, int y, void* hWnd, int flag) {

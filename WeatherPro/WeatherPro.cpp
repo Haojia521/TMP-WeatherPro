@@ -468,6 +468,15 @@ void WeatherPro::OnInitialize(ITrafficMonitor *pApp) {
 }
 
 void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
+    if (index == ExtendedInfoIndex::EI_TASKBAR_WND_VALUE_RIGHT_ALIGN) {
+        try {
+            main_item.SetTextAlignRight(std::stoi(data) > 0);
+        }
+        catch (...) {
+            // do nothing
+        }
+    }
+
     if (index == ExtendedInfoIndex::EI_CONFIG_DIR) {
         // 兼容旧版TrafficMonitor（Ver < 1.86）
         if (host_app == nullptr) {

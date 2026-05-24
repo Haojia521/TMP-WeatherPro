@@ -92,6 +92,7 @@ public:
         bool draw_weather_icon{ true };
         bool auto_locating{ false };
         bool draw_alerts_notification_dot{ true };
+        bool main_item_scroll_text{ true };
 
         std::unordered_set<WeatherDataKey, WeatherDataKeyHash> pinned_item_data_keys;
     };

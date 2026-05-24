@@ -68,73 +68,73 @@ namespace
         return int_to_wstring_8((static_cast<int>(time_slot) << 16) | static_cast<int>(item));
     }
 
-    const wchar_t* GetItemValueSampleText(WeatherTimeSlot time_slot, WeatherItem item) {
-        const auto api_type = DataManager::Instance().GetConfig().api_type;
+    //const wchar_t* GetItemValueSampleText(WeatherTimeSlot time_slot, WeatherItem item) {
+    //    const auto api_type = DataManager::Instance().GetConfig().api_type;
 
-        if (item == WeatherItem::TEMPERATURE) {
-            if (time_slot == WeatherTimeSlot::REALTIME) {
-                return L"-20.0℃";
-            } else {
-                return L"-18.0~20.0℃";
-            }
-        } else if (item == WeatherItem::WEATHER_TEXT) {
-            if (time_slot == WeatherTimeSlot::REALTIME) {
-                if (api_type == ApiType::WeatherComCnSpider || api_type == ApiType::QWeather) {
-                    return L"大到暴雨";
-                } else {
-                    return L"thunderstorm";
-                }
-            } else {
-                if (api_type == ApiType::WeatherComCnSpider || api_type == ApiType::QWeather) {
-                    return L"多云~暴雨";
-                } else {
-                    return L"thunderstorm";
-                }
-            }
-        } else if (item == WeatherItem::HUMIDITY) {
-            return L"100 %";
-        } else if (item == WeatherItem::WIND) {
-            if (api_type == ApiType::WeatherComCnSpider || api_type == ApiType::QWeather) {
-                return L"东北风 12km/h";
-            } else {
-                return L"NE 12km/h";
-            }
-        } else if (item == WeatherItem::AIR_QUALITY) {
-            if (api_type == ApiType::WeatherComCnSpider) {
-                return L"999";
-            } else if (api_type == ApiType::QWeather) {
-                return L"Good (AQI (CN): 100)";
-            } else if (api_type == ApiType::OpenWeather) {
-                return L"99";
-            }
-        } else if (item == WeatherItem::AIR_PM2P5) {
-            if (api_type == ApiType::WeatherComCnSpider) {
-                return L"999";
-            } else if (api_type == ApiType::QWeather || api_type == ApiType::OpenWeather) {
-                return L"100.00μg/m3";
-            }
-        } else if (item == WeatherItem::AIR_PM10) {
-            if (api_type == ApiType::WeatherComCnSpider) {
-                return L"999";
-            } else if (api_type == ApiType::QWeather || api_type == ApiType::OpenWeather) {
-                return L"100.00μg/m3";
-            }
-        } else if (item == WeatherItem::UV_INDEX) {
-            return L"10";
-        } else if (item == WeatherItem::PRECIPITATION) {
-            if (time_slot == WeatherTimeSlot::REALTIME) {
-                if (api_type == ApiType::OpenWeather) {
-                    return L"rain 100mm/h";
-                }
-            } else {
-                if (api_type == ApiType::OpenWeather) {
-                    return L"100% rain 100mm";
-                }
-            }
-        }
+    //    if (item == WeatherItem::TEMPERATURE) {
+    //        if (time_slot == WeatherTimeSlot::REALTIME) {
+    //            return L"-20.0℃";
+    //        } else {
+    //            return L"-18.0~20.0℃";
+    //        }
+    //    } else if (item == WeatherItem::WEATHER_TEXT) {
+    //        if (time_slot == WeatherTimeSlot::REALTIME) {
+    //            if (api_type == ApiType::WeatherComCnSpider || api_type == ApiType::QWeather) {
+    //                return L"大到暴雨";
+    //            } else {
+    //                return L"thunderstorm";
+    //            }
+    //        } else {
+    //            if (api_type == ApiType::WeatherComCnSpider || api_type == ApiType::QWeather) {
+    //                return L"多云~暴雨";
+    //            } else {
+    //                return L"thunderstorm";
+    //            }
+    //        }
+    //    } else if (item == WeatherItem::HUMIDITY) {
+    //        return L"100 %";
+    //    } else if (item == WeatherItem::WIND) {
+    //        if (api_type == ApiType::WeatherComCnSpider || api_type == ApiType::QWeather) {
+    //            return L"东北风 12km/h";
+    //        } else {
+    //            return L"NE 12km/h";
+    //        }
+    //    } else if (item == WeatherItem::AIR_QUALITY) {
+    //        if (api_type == ApiType::WeatherComCnSpider) {
+    //            return L"999";
+    //        } else if (api_type == ApiType::QWeather) {
+    //            return L"Good (AQI (CN): 100)";
+    //        } else if (api_type == ApiType::OpenWeather) {
+    //            return L"99";
+    //        }
+    //    } else if (item == WeatherItem::AIR_PM2P5) {
+    //        if (api_type == ApiType::WeatherComCnSpider) {
+    //            return L"999";
+    //        } else if (api_type == ApiType::QWeather || api_type == ApiType::OpenWeather) {
+    //            return L"100.00μg/m3";
+    //        }
+    //    } else if (item == WeatherItem::AIR_PM10) {
+    //        if (api_type == ApiType::WeatherComCnSpider) {
+    //            return L"999";
+    //        } else if (api_type == ApiType::QWeather || api_type == ApiType::OpenWeather) {
+    //            return L"100.00μg/m3";
+    //        }
+    //    } else if (item == WeatherItem::UV_INDEX) {
+    //        return L"10";
+    //    } else if (item == WeatherItem::PRECIPITATION) {
+    //        if (time_slot == WeatherTimeSlot::REALTIME) {
+    //            if (api_type == ApiType::OpenWeather) {
+    //                return L"rain 100mm/h";
+    //            }
+    //        } else {
+    //            if (api_type == ApiType::OpenWeather) {
+    //                return L"100% rain 100mm";
+    //            }
+    //        }
+    //    }
 
-        return L"???";
-    }
+    //    return L"???";
+    //}
 }
 
 PinnedItem::PinnedItem(WeatherTimeSlot wts, WeatherItem wi) : time_slot(wts), weather_item(wi) {
@@ -142,7 +142,7 @@ PinnedItem::PinnedItem(WeatherTimeSlot wts, WeatherItem wi) : time_slot(wts), we
 
     name_text = std::format(L"WeatherPro-{}", label);
     id_text = ConstructItemId(wts, wi);
-    label_text = std::format(L"{}:", label);
+    label_text = std::format(L"{}: ", label);
 }
 
 const wchar_t* PinnedItem::GetItemName() const {
@@ -158,7 +158,7 @@ const wchar_t* PinnedItem::GetItemLableText() const {
 }
 
 const wchar_t* PinnedItem::GetItemValueSampleText() const {
-    return ::GetItemValueSampleText(time_slot, weather_item);
+    return GetItemValueText();
 }
 
 const wchar_t* PinnedItem::GetItemValueText() const {

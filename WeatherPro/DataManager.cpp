@@ -43,6 +43,7 @@ namespace
     constexpr std::wstring_view WSV_AUTO_LOCATING_SOURCE{ L"auto_locating_source" };
     constexpr std::wstring_view WSV_DRAW_ALERTS_NOTIFICATION_DOT{ L"draw_alerts_notification_dot" };
     constexpr std::wstring_view WSV_PINNED_ITEM_DATA_KEYS{ L"pinned_item_data_keys" };
+    constexpr std::wstring_view WSV_MAIN_ITEM_SCROLL_TEXT{ L"main_item_scroll_text" };
 
     template<typename ENM_T, typename STR_T>
     struct EnumStrMappingItem
@@ -346,6 +347,7 @@ void DataManager::LoadConfigs(std::wstring_view cfg_dir) {
     config_.draw_weather_icon = ini_helper.GetBool(WSV_DRAW_WEATHER_ICON, true);
     config_.auto_locating = ini_helper.GetBool(WSV_ACTIVE_AUTO_LOCATING);
     config_.draw_alerts_notification_dot = ini_helper.GetBool(WSV_DRAW_ALERTS_NOTIFICATION_DOT, true);
+    config_.main_item_scroll_text = ini_helper.GetBool(WSV_MAIN_ITEM_SCROLL_TEXT, true);
 
     config_.pinned_item_data_keys = ParsePinnedItemDataKeys(ini_helper.GetValueW(WSV_PINNED_ITEM_DATA_KEYS));
 
@@ -373,6 +375,7 @@ void DataManager::SaveConfigs() const {
     ini_helper.SetBool(WSV_DRAW_WEATHER_ICON, config_.draw_weather_icon);
     ini_helper.SetBool(WSV_ACTIVE_AUTO_LOCATING, config_.auto_locating);
     ini_helper.SetBool(WSV_DRAW_ALERTS_NOTIFICATION_DOT, config_.draw_alerts_notification_dot);
+    ini_helper.SetBool(WSV_MAIN_ITEM_SCROLL_TEXT, config_.main_item_scroll_text);
 
     ini_helper.SetValueW(WSV_PINNED_ITEM_DATA_KEYS, ToWString(config_.pinned_item_data_keys));
 
