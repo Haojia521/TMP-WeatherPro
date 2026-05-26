@@ -464,7 +464,7 @@ void WeatherPro::OnInitialize(ITrafficMonitor *pApp) {
         // set thread ui language
         //SetLanguageId(pApp->GetLanguageId());
 
-        host_app = pApp;
+        //host_app = pApp;
     }
 }
 
