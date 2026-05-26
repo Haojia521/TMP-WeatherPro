@@ -382,7 +382,7 @@ void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
         DrawTextScrolling(borrowed_dc.get(), rc_text, dark_mode);
     } else {
         SetText(CString{});
-        auto dt_flag = DT_VCENTER;
+        auto dt_flag = DT_VCENTER | DT_SINGLELINE;
         if (text_align_right) {
             dt_flag |= DT_RIGHT;
         }
