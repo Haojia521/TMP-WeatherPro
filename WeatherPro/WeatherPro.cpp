@@ -462,7 +462,7 @@ void WeatherPro::OnInitialize(ITrafficMonitor *pApp) {
         main_item.SetTaskbarWndDPI(pApp->GetDPI(ITrafficMonitor::DPI_TASKBAR));
 
         // set thread ui language
-        //SetLanguageId(pApp->GetLanguageId());
+        SetLanguageId(pApp->GetLanguageId());
 
         //host_app = pApp;
     }
