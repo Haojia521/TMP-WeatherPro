@@ -23,7 +23,9 @@ namespace
         auto sec = floor<seconds>(tp);
         auto ms = duration_cast<milliseconds>(tp - sec).count();
 
-        return std::format("{:%F %T}.{:03}", sec, ms);
+        zoned_time zt{ current_zone(), sec };
+
+        return std::format("{:%F %T}.{:03}", zt, ms);
     }
 
     std::string formatLog(const Logger::LogEntry& log)
