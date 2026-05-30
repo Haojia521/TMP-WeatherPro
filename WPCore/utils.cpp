@@ -4,6 +4,7 @@
 
 #include <format>
 #include <chrono>
+#include <sstream>
 
 #include <openssl/evp.h>
 #include <openssl/pem.h>
@@ -153,5 +154,81 @@ namespace utils
         const auto tp = sys_seconds{ seconds{sec} };
         const auto day_time = tp - floor<days>(tp);
         return std::format("{:%T}", hh_mm_ss{ day_time });
+    }
+
+    std::int64_t parse_iso_datetime_to_utc_seconds(std::string_view iso_datatime) {
+        using namespace std::chrono;
+
+        std::string s(iso_datatime);
+
+        auto parse_z = [](const std::string& text)
+        {
+            local_time<seconds> lt{};
+
+            {
+                std::istringstream iss(text);
+                iss >> parse("%FT%T", lt);   // YYYY-MM-DDTHH:MM:SS
+                if (!iss.fail()) {
+                    return lt.time_since_epoch().count();
+                }
+            }
+
+            {
+                std::istringstream iss(text);
+                iss >> parse("%FT%R", lt);   // YYYY-MM-DDTHH:MM
+                if (!iss.fail()) {
+                    return lt.time_since_epoch().count();
+                }
+            }
+
+            throw std::runtime_error("failed to parse UTC datetime: " + text);
+        };
+
+        auto parse_with_offset = [](const std::string& text)
+        {
+            local_time<seconds> lt{};
+            minutes offset{};
+
+            {
+                std::istringstream iss(text);
+                iss >> parse("%FT%T%Ez", lt, offset); // YYYY-MM-DDTHH:MM:SS+08:00
+                if (!iss.fail()) {
+                    return (lt.time_since_epoch() - offset).count();
+                }
+            }
+
+            {
+                std::istringstream iss(text);
+                iss >> parse("%FT%R%Ez", lt, offset); // YYYY-MM-DDTHH:MM+08:00
+                if (!iss.fail()) {
+                    return (lt.time_since_epoch() - offset).count();
+                }
+            }
+
+            throw std::runtime_error("failed to parse offset datetime: " + text);
+        };
+
+        std::int64_t utc_seconds{};
+
+        try {
+            if (!s.empty() && s.back() == 'Z') {
+                s.pop_back();
+                utc_seconds = parse_z(s);
+            } else {
+                utc_seconds = parse_with_offset(s);
+            }
+        }
+        catch (const std::exception &e) {
+            Logger::instance().error(e.what());
+        }
+
+        return utc_seconds;
+    }
+
+    std::int64_t parse_iso_datetime_to_local_seconds(std::string_view iso_datatime) {
+        using namespace std::chrono;
+
+        auto utc_seconds = parse_iso_datetime_to_utc_seconds(iso_datatime);
+        return current_zone()->to_local(sys_seconds{ seconds{ utc_seconds } }).time_since_epoch().count();
     }
 }

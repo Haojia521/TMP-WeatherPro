@@ -28,4 +28,7 @@ namespace utils
     std::string timestamp_string(std::int64_t sec);
     std::string timestamp_string_date(std::int64_t sec);
     std::string timestamp_string_time(std::int64_t sec);
+
+    std::int64_t parse_iso_datetime_to_utc_seconds(std::string_view iso_datatime);
+    std::int64_t parse_iso_datetime_to_local_seconds(std::string_view iso_datatime);
 }
