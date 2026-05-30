@@ -5,6 +5,7 @@
 
 #include <array>
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <fstream>
 #include <sstream>
@@ -97,6 +98,20 @@ namespace
         return std::format("[{}] {} ({})", status, title, detail);
     }
 
+    std::string timestamp_string_hhmm(std::int64_t sec) {
+        using namespace std::chrono;
+
+        const auto tp = sys_seconds{ seconds{sec} };
+        const auto day_time = tp - floor<days>(tp);
+        return std::format("{:%R}", hh_mm_ss{ day_time });
+    }
+
+    std::string timestamp_string_yyyymmdd_hhmm(std::int64_t sec) {
+        using namespace std::chrono;
+
+        return std::format("{:%F %R}", sys_seconds{ seconds{sec} });
+    }
+
     bool queryFrame(const std::string &path, const utils::HttpParams &params,
                     const DataProviderQWeather::ConfigApp &cfg,
                     const std::function<void(yyjson_val*)> &func)
@@ -181,7 +196,7 @@ namespace
 
             rt_weather.temp = jsonGetStrValue(now_obj, "temp");
             rt_weather.temp_feels_like = jsonGetStrValue(now_obj, "feelsLike");
-            rt_weather.update_time =  utils::timestamp_string_time(
+            rt_weather.update_time = timestamp_string_hhmm(
                 utils::parse_iso_datetime_to_local_seconds(
                     jsonGetStrValue(now_obj, "obsTime")
                 )
@@ -320,7 +335,7 @@ namespace
                 DataProviderQWeather::WeatherAlert wa;
 
                 wa.sender_name = jsonGetStrValue(j_val_alt, "senderName");
-                wa.issued_time = utils::timestamp_string(
+                wa.issued_time = timestamp_string_yyyymmdd_hhmm(
                     utils::parse_iso_datetime_to_local_seconds(
                         jsonGetStrValue(j_val_alt, "issuedTime")
                     )
@@ -340,7 +355,7 @@ namespace
                     wa.color = std::format("{:x}{:x}{:x}{:x}", r, g, b, a);
                 }
 
-                wa.expire_time = utils::timestamp_string(
+                wa.expire_time = timestamp_string_yyyymmdd_hhmm(
                     utils::parse_iso_datetime_to_local_seconds(
                         jsonGetStrValue(j_val_alt, "expireTime")
                     )
