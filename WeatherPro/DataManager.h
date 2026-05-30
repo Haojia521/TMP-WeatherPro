@@ -93,6 +93,7 @@ public:
         bool auto_locating{ false };
         bool draw_alerts_notification_dot{ true };
         bool main_item_scroll_text{ true };
+        bool format_geo_coords_in_summary{ true };
 
         std::unordered_set<WeatherDataKey, WeatherDataKeyHash> pinned_item_data_keys;
     };

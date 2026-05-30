@@ -45,7 +45,7 @@ struct Location
     std::string longitude;
     std::string latitude;
 
-    std::string getFormattedString() const;
+    std::string getFormattedString(bool format_geo_coords = true) const;
 
     bool operator==(const Location&) const = default;
 };

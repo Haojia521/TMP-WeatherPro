@@ -136,6 +136,7 @@
 #define IDC_BUTTON1                     1068
 #define IDC_CHECK_MAIN_ITEM_SCROLL_TEXT 1069
 #define IDC_CHECK1                      1070
+#define IDC_CHECK_SHOW_GEO_COORDS_IN_SUMMARY 1070
 
 // Next default values for new objects
 // 

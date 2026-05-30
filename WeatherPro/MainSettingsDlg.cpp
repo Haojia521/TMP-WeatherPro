@@ -34,6 +34,7 @@ MainSettingsDlg::MainSettingsDlg(CWnd* pParent /*=nullptr*/)
 	, bool_auto_locating(FALSE)
 	, bool_draw_alerts_notification_dot(FALSE)
 	, bool_main_item_scroll_text(FALSE)
+	, bool_show_geo_coords_in_summary(FALSE)
 {
 
 }
@@ -55,6 +56,7 @@ void MainSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_AUTO_LOCATING, bool_auto_locating);
 	DDX_Check(pDX, IDC_CHECK_DRAW_ALERTS_NOTIFICATION_DOT, bool_draw_alerts_notification_dot);
 	DDX_Check(pDX, IDC_CHECK_MAIN_ITEM_SCROLL_TEXT, bool_main_item_scroll_text);
+	DDX_Check(pDX, IDC_CHECK_SHOW_GEO_COORDS_IN_SUMMARY, bool_show_geo_coords_in_summary);
 }
 
 
@@ -106,6 +108,7 @@ BOOL MainSettingsDlg::OnInitDialog()
 	bool_draw_icon = cfg.draw_weather_icon ? TRUE : FALSE;
 	bool_draw_alerts_notification_dot = cfg.draw_alerts_notification_dot ? TRUE : FALSE;
 	bool_main_item_scroll_text = cfg.main_item_scroll_text ? TRUE : FALSE;
+	bool_show_geo_coords_in_summary = cfg.format_geo_coords_in_summary ? TRUE : FALSE;
 
 	// initialze radio button
 	int_ldc_action = cfg.double_click_action == DataManager::LDoubleClickAction::OpenSettingWindow ? 0 : 1;
@@ -141,6 +144,7 @@ DataManager::Config MainSettingsDlg::GetConfigsFromUI() {
 	cfg.draw_weather_icon = bool_draw_icon == TRUE;
 	cfg.draw_alerts_notification_dot = bool_draw_alerts_notification_dot == TRUE;
 	cfg.main_item_scroll_text = bool_main_item_scroll_text == TRUE;
+	cfg.format_geo_coords_in_summary = bool_show_geo_coords_in_summary == TRUE;
 	cfg.auto_locating_src = old_cfg.auto_locating_src;
 	cfg.pinned_item_data_keys = old_cfg.pinned_item_data_keys;
 

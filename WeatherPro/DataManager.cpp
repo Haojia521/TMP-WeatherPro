@@ -44,6 +44,7 @@ namespace
     constexpr std::wstring_view WSV_DRAW_ALERTS_NOTIFICATION_DOT{ L"draw_alerts_notification_dot" };
     constexpr std::wstring_view WSV_PINNED_ITEM_DATA_KEYS{ L"pinned_item_data_keys" };
     constexpr std::wstring_view WSV_MAIN_ITEM_SCROLL_TEXT{ L"main_item_scroll_text" };
+    constexpr std::wstring_view WSV_FORMAT_GEO_COORDS_IN_SUMMARY{ L"format_geo_coords_in_summary" };
 
     template<typename ENM_T, typename STR_T>
     struct EnumStrMappingItem
@@ -152,8 +153,8 @@ namespace
                                        api_type, WSV_API_WCC);
     }
 
-    std::wstring FormatLocation(const Location &loc) {
-        return cmn::MultiByte2WideChar(loc.getFormattedString().c_str());
+    std::wstring FormatLocation(const Location &loc, bool format_geo_coords) {
+        return cmn::MultiByte2WideChar(loc.getFormattedString(format_geo_coords).c_str());
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// 自动定位
@@ -348,6 +349,7 @@ void DataManager::LoadConfigs(std::wstring_view cfg_dir) {
     config_.auto_locating = ini_helper.GetBool(WSV_ACTIVE_AUTO_LOCATING);
     config_.draw_alerts_notification_dot = ini_helper.GetBool(WSV_DRAW_ALERTS_NOTIFICATION_DOT, true);
     config_.main_item_scroll_text = ini_helper.GetBool(WSV_MAIN_ITEM_SCROLL_TEXT, true);
+    config_.format_geo_coords_in_summary = ini_helper.GetBool(WSV_FORMAT_GEO_COORDS_IN_SUMMARY, true);
 
     config_.pinned_item_data_keys = ParsePinnedItemDataKeys(ini_helper.GetValueW(WSV_PINNED_ITEM_DATA_KEYS));
 
@@ -376,6 +378,7 @@ void DataManager::SaveConfigs() const {
     ini_helper.SetBool(WSV_ACTIVE_AUTO_LOCATING, config_.auto_locating);
     ini_helper.SetBool(WSV_DRAW_ALERTS_NOTIFICATION_DOT, config_.draw_alerts_notification_dot);
     ini_helper.SetBool(WSV_MAIN_ITEM_SCROLL_TEXT, config_.main_item_scroll_text);
+    ini_helper.SetBool(WSV_FORMAT_GEO_COORDS_IN_SUMMARY, config_.format_geo_coords_in_summary);
 
     ini_helper.SetValueW(WSV_PINNED_ITEM_DATA_KEYS, ToWString(config_.pinned_item_data_keys));
 
@@ -473,7 +476,9 @@ void DataManager::RefreshCache() const {
 
         // rebuild tooltip text
         const auto summary_wstr = cmn::MultiByte2WideChar(weather_data->getWeatherSummary().c_str());
-        new_snapshot->tooltip_text = std::format(L"{} {}", FormatLocation(current_loc_), summary_wstr);
+        new_snapshot->tooltip_text = std::format(
+            L"{} {}", FormatLocation(current_loc_, config_.format_geo_coords_in_summary), summary_wstr
+        );
     }
 
     cache_snapshot.store(new_snapshot, std::memory_order_release);

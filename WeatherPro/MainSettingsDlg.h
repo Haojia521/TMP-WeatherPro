@@ -32,6 +32,7 @@ protected:
 	BOOL bool_draw_icon;
 	BOOL bool_draw_alerts_notification_dot;
 	BOOL bool_main_item_scroll_text;
+	BOOL bool_show_geo_coords_in_summary;
 	int int_ldc_action;
 
 	Location current_location;
