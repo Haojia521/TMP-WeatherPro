@@ -44,31 +44,31 @@ namespace
         }
     }
     
-    constexpr std::array<std::string_view, 60> WEATHER_CODES{
-        "100", "101", "102", "103", "104", "150", "151", "152", 
-        "153", "300", "301", "302", "303", "304", "305", "306", 
-        "307", "308", "309", "310", "311", "312", "313", "314", 
-        "315", "316", "317", "318", "350", "351", "399", "400", 
-        "401", "402", "403", "404", "405", "406", "407", "408", 
-        "409", "410", "456", "457", "499", "500", "501", "502", 
-        "503", "504", "507", "508", "509", "510", "511", "512", 
-        "513", "514", "515", "999"
+    constexpr std::array<std::wstring_view, 60> WEATHER_CODES{
+        L"100", L"101", L"102", L"103", L"104", L"150", L"151", L"152", 
+        L"153", L"300", L"301", L"302", L"303", L"304", L"305", L"306", 
+        L"307", L"308", L"309", L"310", L"311", L"312", L"313", L"314", 
+        L"315", L"316", L"317", L"318", L"350", L"351", L"399", L"400", 
+        L"401", L"402", L"403", L"404", L"405", L"406", L"407", L"408", 
+        L"409", L"410", L"456", L"457", L"499", L"500", L"501", L"502", 
+        L"503", L"504", L"507", L"508", L"509", L"510", L"511", L"512", 
+        L"513", L"514", L"515", L"999"
     };
 }
 
 const IconSheet* WapiQWeather::GetWeatherIcons() const {
-    auto icon_res_type = config.icon_style == IconStyle::Hollow ?
+    const auto icon_res_type = config.icon_style == IconStyle::Hollow ?
         IconResType::QWeatherHollow : IconResType::QWeatherFill;
     return IconSheetManager::Instance().GetIconSheet(icon_res_type);
 }
 
-int WapiQWeather::GetWeatherIconIndex(const std::string &weather_code) const {
-    auto it = std::ranges::find(WEATHER_CODES, weather_code);
-    if (it != WEATHER_CODES.end()) {
+int WapiQWeather::GetWeatherIconIndex(std::wstring_view weather_code) const {
+    if (auto it = std::ranges::find(WEATHER_CODES, weather_code);
+        it != WEATHER_CODES.end()) {
         return static_cast<int>(std::distance(WEATHER_CODES.begin(), it));
-    } else {
-        return static_cast<int>(WEATHER_CODES.size() - 1);
     }
+
+    return static_cast<int>(WEATHER_CODES.size() - 1);
 }
 
 DataProvider& WapiQWeather::GetProvider() {

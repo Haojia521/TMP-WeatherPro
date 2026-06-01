@@ -163,15 +163,22 @@ const wchar_t* PinnedItem::GetItemValueSampleText() const {
 
 const wchar_t* PinnedItem::GetItemValueText() const {
     const auto data_snapshot = DataManager::GetSnapshot();
-    if (data_snapshot == nullptr) {
-        return L"--";
+    if (data_snapshot != nullptr) {
+        
+        const std::wstring_view value_text{
+            data_snapshot->GetWeatherItem(time_slot, weather_item)
+        };
+        
+        if (!value_text.empty()) {
+            return value_text.data();
+        }
     }
 
-    return data_snapshot->GetWeatherItem(time_slot, weather_item);
+    return L"--";
 }
 
 int PinnedItem::OnMouseEvent(MouseEventType type, int x, int y, void* hWnd, int flag) {
-    AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
     if (type == MouseEventType::MT_DBCLICKED) {
         const auto &cfg = DataManager::Instance().GetConfig();

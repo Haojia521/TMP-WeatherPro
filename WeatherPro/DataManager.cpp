@@ -234,6 +234,11 @@ namespace
         ~UpdateGuard() {
             is_updating.store(false, std::memory_order_release);
         }
+
+        UpdateGuard(const UpdateGuard&) = delete;
+        UpdateGuard(UpdateGuard&&) = delete;
+        UpdateGuard& operator=(const UpdateGuard&) = delete;
+        UpdateGuard& operator=(UpdateGuard&&) = delete;
     };
 
     std::atomic<std::shared_ptr<const WeatherData>> current_weather_data;
@@ -254,18 +259,11 @@ namespace
                 return cache_map.at(id_pair).c_str();
             }
 
-            return L"--";
-        }
-
-        [[nodiscard]]
-        const WeatherData* GetWeatherData() const override {
-            return base_data.get();
+            return L"";
         }
 
         WeatherCacheMap cache_map;
         std::wstring tooltip_text;
-
-        std::shared_ptr<const WeatherData> base_data;
     };
 
     std::atomic<std::shared_ptr<SnapshotImpl>> cache_snapshot;
@@ -287,7 +285,7 @@ namespace
         return keys;
     }
 
-    const std::wstring ToWString(const std::unordered_set<WeatherDataKey, WeatherDataKeyHash> &keys) {
+    std::wstring ToWString(const std::unordered_set<WeatherDataKey, WeatherDataKeyHash> &keys) {
         std::wstring str_keys;
         str_keys.reserve(keys.size() * 8);
 
@@ -434,8 +432,6 @@ void DataManager::RefreshCache() const {
 
     auto weather_data = current_weather_data.load(std::memory_order_acquire);
     if (weather_data != nullptr) {
-        new_snapshot->base_data = weather_data;
-
         // rebuild cache map
         constexpr static auto array_time_slot = std::to_array(
             {

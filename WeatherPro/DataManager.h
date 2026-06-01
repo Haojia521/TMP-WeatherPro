@@ -60,7 +60,6 @@ public:
 
         [[nodiscard]] virtual const wchar_t* GetTooltipText() const = 0;
         [[nodiscard]] virtual const wchar_t* GetWeatherItem(WeatherTimeSlot time_slot, WeatherItem item) const = 0;
-        [[nodiscard]] virtual const WeatherData* GetWeatherData() const = 0;
     };
 
     [[nodiscard]]

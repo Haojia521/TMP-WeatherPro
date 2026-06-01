@@ -44,26 +44,26 @@ const IconSheet* WapiOpenWeather::GetWeatherIcons() const {
     return IconSheetManager::Instance().GetIconSheet(IconResType::OpenWeather);
 }
 
-int WapiOpenWeather::GetWeatherIconIndex(const std::string &weather_code) const {
-    static const std::unordered_map<std::string, int> code_index_map{
-        {"01d", 0},
-        {"02d", 2},
-        {"03d", 4},
-        {"04d", 5},
-        {"09d", 6},
-        {"10d", 7},
-        {"11d", 9},
-        {"13d", 10},
-        {"50d", 11},
-        {"01n", 1},
-        {"02n", 3},
-        {"03n", 4},
-        {"04n", 5},
-        {"09n", 6},
-        {"10n", 8},
-        {"11n", 9},
-        {"13n", 10},
-        {"50n", 11},
+int WapiOpenWeather::GetWeatherIconIndex(std::wstring_view weather_code) const {
+    static const std::unordered_map<std::wstring_view, int> code_index_map{
+        {L"01d", 0},
+        {L"02d", 2},
+        {L"03d", 4},
+        {L"04d", 5},
+        {L"09d", 6},
+        {L"10d", 7},
+        {L"11d", 9},
+        {L"13d", 10},
+        {L"50d", 11},
+        {L"01n", 1},
+        {L"02n", 3},
+        {L"03n", 4},
+        {L"04n", 5},
+        {L"09n", 6},
+        {L"10n", 8},
+        {L"11n", 9},
+        {L"13n", 10},
+        {L"50n", 11},
     };
 
     int idx{ 12 };

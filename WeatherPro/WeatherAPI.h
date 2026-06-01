@@ -11,7 +11,7 @@ public:
     virtual ~WeatherApi() = default;
 
     virtual const IconSheet* GetWeatherIcons() const = 0;
-    virtual int GetWeatherIconIndex(const std::string &weather_code) const = 0;
+    virtual int GetWeatherIconIndex(std::wstring_view weather_code) const = 0;
     virtual DataProvider& GetProvider() = 0;
     virtual const DataProvider& GetProvider() const = 0;
     virtual void LoadConfig(const CSimpleIniW &ini_file) = 0;
