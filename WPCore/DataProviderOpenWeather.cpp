@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "utils.h"
 #include "AppLocale.h"
+#include "JsonValueHelper.h"
 
 #include <functional>
 #include <future>
@@ -10,22 +11,6 @@
 
 namespace
 {
-    bool jsonHasObject(yyjson_val *j_val, const char *key) {
-        return yyjson_obj_get(j_val, key) != nullptr;
-    }
-
-    int jsonGetInt(yyjson_val *j_val, const char *key) {
-        return yyjson_get_int(yyjson_obj_get(j_val, key));
-    }
-
-    int64_t jsonGetInt64(yyjson_val *j_val, const char *key) {
-        return yyjson_get_sint(yyjson_obj_get(j_val, key));
-    }
-
-    std::string jsonGetStr(yyjson_val *j_val, const char *key) {
-        return yyjson_get_str(yyjson_obj_get(j_val, key));
-    }
-
     std::string jsonGetNumberAsStr1dp(yyjson_val *j_val, const char *key) {
         const auto num = yyjson_get_num(yyjson_obj_get(j_val, key));
         
@@ -101,7 +86,7 @@ namespace
         return directions[index];
     }
 
-    bool queryFrame(const std::string &path, utils::HttpParams &params, const std::string &app_id,
+    bool queryFrame(std::string_view path, utils::HttpParams &params, const std::string &app_id,
                     const std::function<void(yyjson_val*)> &func) {
         constexpr std::string_view HOST{ "http://api.openweathermap.org" };
 
@@ -110,7 +95,7 @@ namespace
         // get response content
         std::string content;
 
-        auto status_code = utils::internetGetWithRetry(std::string{ HOST }, path, content, params);
+        auto status_code = utils::internetGetWithRetry(std::string{ HOST }, std::string{ path }, content, params);
 
         auto succeed{ false };
         if (!content.empty()) {
@@ -126,7 +111,7 @@ namespace
                     func(root);
                     succeed = true;
                 } else {
-                    Logger::instance().error(std::format("[{}] {}", status_code, jsonGetStr(root, "message")));
+                    Logger::instance().error(std::format("[{}] {}", status_code, jvh::getString(root, "message")));
                 }
             } else {
                 Logger::instance().error(tr::txt(tr::TID::ERR_PARSING_JSON_FAILED));
@@ -139,10 +124,8 @@ namespace
         return succeed;
     }
 
-    bool queryWeatherFrame(const Location &loc, const std::string &path, utils::HttpParams &params, const std::string &app_id,
-                    const std::function<void(yyjson_val*)> &func) {
-        constexpr std::string_view HOST{ "http://api.openweathermap.org" };
-
+    bool queryWeatherFrame(const Location &loc, std::string_view path, utils::HttpParams &params, const std::string &app_id,
+                           const std::function<void(yyjson_val*)> &func) {
         if (loc.longitude.empty() || loc.latitude.empty()) {
             Logger::instance().error(tr::txt(tr::TID::ERR_NO_LONG_LAT));
             return false;
@@ -156,9 +139,9 @@ namespace
     }
 
     RealtimeWeather queryRealtimeWeather(const Location &loc, const Config &cfg) {
-        RealtimeWeather rt_weather{};
+        constexpr std::string_view url_path{ "/data/2.5/weather" };
 
-        const std::string url_path{ "/data/2.5/weather" };
+        RealtimeWeather rt_weather{};
 
         utils::HttpParams params;
         params.data.emplace("units", getUnitName(cfg.unit_type));
@@ -167,9 +150,9 @@ namespace
             // weather
             if (auto *j_weather = yyjson_arr_get(yyjson_obj_get(j_root, "weather"), 0); 
                 j_weather != nullptr) {
-                rt_weather.weather_main = jsonGetStr(j_weather, "main");
-                rt_weather.weather_description = jsonGetStr(j_weather, "description");
-                rt_weather.weather_icon = jsonGetStr(j_weather, "icon");
+                rt_weather.weather_main = jvh::getString(j_weather, "main");
+                rt_weather.weather_description = jvh::getString(j_weather, "description");
+                rt_weather.weather_icon = jvh::getString(j_weather, "icon");
             }
 
             // temperature & humidity
@@ -177,28 +160,28 @@ namespace
                 j_main != nullptr) {
                 rt_weather.temp = jsonGetNumberAsStr1dp(j_main, "temp");
                 rt_weather.temp_feels_like = jsonGetNumberAsStr1dp(j_main, "feels_like");
-                rt_weather.humidity = std::to_string(jsonGetInt(j_main, "humidity"));
+                rt_weather.humidity = std::to_string(jvh::getInt(j_main, "humidity"));
             }
 
             // wind
             if (auto *j_wind = yyjson_obj_get(j_root, "wind"); 
                 j_wind != nullptr) {
                 rt_weather.wind_speed = jsonGetNumberAsStr1dp(j_wind, "speed");
-                rt_weather.wind_direction = getWindDirectionText(jsonGetInt(j_wind, "deg"));
+                rt_weather.wind_direction = getWindDirectionText(jvh::getInt(j_wind, "deg"));
             }
 
             // precipitation
-            if (jsonHasObject(j_root, "rain")) {
+            if (jvh::hasObject(j_root, "rain")) {
                 auto *j_precip_rain = yyjson_obj_get(j_root, "rain");
                 rt_weather.precipitation_rain_1h = jsonGetNumberAsStr1dp(j_precip_rain, "1h");
             }
-            if (jsonHasObject(j_root, "snow")) {
+            if (jvh::hasObject(j_root, "snow")) {
                 auto *j_precip_snow = yyjson_obj_get(j_root, "snow");
                 rt_weather.precipitation_snow_1h = jsonGetNumberAsStr1dp(j_precip_snow, "1h");
             }
 
             // update time
-            const auto ts = jsonGetInt(j_root, "dt") + jsonGetInt(j_root, "timezone");
+            const auto ts = jvh::getInt(j_root, "dt") + jvh::getInt(j_root, "timezone");
             rt_weather.update_time = utils::timestamp_string_time(ts);
 
             rt_weather.unit_type = cfg.unit_type;
@@ -212,9 +195,9 @@ namespace
     }
 
     std::array<ForecastedWeather, 3> queryForecastedWeather(const Location &loc, const Config &cfg) {
-        std::array<ForecastedWeather, 3> fc_weather_3d{};
+        constexpr std::string_view url_path{ "/data/2.5/forecast/daily" };
 
-        const std::string url_path{ "/data/2.5/forecast/daily" };
+        std::array<ForecastedWeather, 3> fc_weather_3d{};
 
         utils::HttpParams params;
         params.data.emplace("cnt", "3");
@@ -225,9 +208,9 @@ namespace
                 // weather
                 if (auto *j_weather = yyjson_arr_get(yyjson_obj_get(j_fc_weahter, "weather"), 0); 
                     j_weather != nullptr) {
-                    fc_weather.weather_main = jsonGetStr(j_weather, "main");
-                    fc_weather.weather_description = jsonGetStr(j_weather, "description");
-                    fc_weather.weather_icon = jsonGetStr(j_weather, "icon");
+                    fc_weather.weather_main = jvh::getString(j_weather, "main");
+                    fc_weather.weather_description = jvh::getString(j_weather, "description");
+                    fc_weather.weather_icon = jvh::getString(j_weather, "icon");
                 }
 
                 // temprature
@@ -238,17 +221,17 @@ namespace
                 }
 
                 // humidity
-                fc_weather.humidity = std::to_string(jsonGetInt(j_fc_weahter, "humidity"));
+                fc_weather.humidity = std::to_string(jvh::getInt(j_fc_weahter, "humidity"));
 
                 // wind
                 fc_weather.wind_speed = jsonGetNumberAsStr1dp(j_fc_weahter, "speed");
-                fc_weather.wind_direction = getWindDirectionText(jsonGetInt(j_fc_weahter, "deg"));
+                fc_weather.wind_direction = getWindDirectionText(jvh::getInt(j_fc_weahter, "deg"));
 
                 // precipitation
-                if (jsonHasObject(j_fc_weahter, "rain")) {
+                if (jvh::hasObject(j_fc_weahter, "rain")) {
                     fc_weather.precipitation_rain = jsonGetNumberAsStr1dp(j_fc_weahter, "rain");
                 }
-                if (jsonHasObject(j_fc_weahter, "snow")) {
+                if (jvh::hasObject(j_fc_weahter, "snow")) {
                     fc_weather.precipitation_snow = jsonGetNumberAsStr1dp(j_fc_weahter, "snow");
                 }
                 {
@@ -266,7 +249,7 @@ namespace
             }
         };
 
-        if (!queryWeatherFrame(loc, url_path, params, cfg.api_key, func)) {
+        if (!queryWeatherFrame(loc, std::string{ url_path }, params, cfg.api_key, func)) {
             Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
         }
 
@@ -274,9 +257,9 @@ namespace
     }
 
     RealtimeAirQuality queryRealtimeAirQuality(const Location &loc, const Config &cfg) {
-        RealtimeAirQuality rt_air{};
+        constexpr std::string_view url_path{ "/data/2.5/air_pollution" };
 
-        const std::string url_path{ "/data/2.5/air_pollution" };
+        RealtimeAirQuality rt_air{};
 
         utils::HttpParams params{};
 
@@ -306,18 +289,18 @@ namespace
     }
 
     auto onecall(const Location &loc, const Config &cfg) {
+        constexpr std::string_view url_path{ "/data/3.0/onecall" };
+
         RealtimeWeather rt_weathe{};
         std::array<ForecastedWeather, 3> fc_weather_3d{};
         WeatherAlerts alerts{};
-
-        const std::string url_path{ "/data/3.0/onecall" };
 
         utils::HttpParams params;
         params.data.emplace("exclude", "minutely,hourly");
         params.data.emplace("units", getUnitName(cfg.unit_type));
 
         auto func = [&rt_weathe, &fc_weather_3d, &alerts](yyjson_val *j_root) {
-            auto timezone_offset = jsonGetInt64(j_root, "timezone_offset");
+            auto timezone_offset = jvh::getSignedInt(j_root, "timezone_offset");
 
             // current weather
             
@@ -325,9 +308,9 @@ namespace
                 // weather
                 if (auto *j_weather = yyjson_obj_get(j_currnet, "weather"); 
                     j_weather != nullptr) {
-                    rt_weathe.weather_main = jsonGetStr(j_weather, "main");
-                    rt_weathe.weather_description = jsonGetStr(j_weather, "description");
-                    rt_weathe.weather_icon = jsonGetStr(j_weather, "icon");
+                    rt_weathe.weather_main = jvh::getString(j_weather, "main");
+                    rt_weathe.weather_description = jvh::getString(j_weather, "description");
+                    rt_weathe.weather_icon = jvh::getString(j_weather, "icon");
                 }
 
                 // temprature
@@ -340,28 +323,28 @@ namespace
 
                 // wind
                 rt_weathe.wind_speed = jsonGetNumberAsStr1dp(j_currnet, "wind_speed");
-                rt_weathe.wind_direction = getWindDirectionText(jsonGetInt(j_currnet, "wind_deg"));
+                rt_weathe.wind_direction = getWindDirectionText(jvh::getInt(j_currnet, "wind_deg"));
 
                 // precipitation
-                if (jsonHasObject(j_currnet, "rain")) {
+                if (jvh::hasObject(j_currnet, "rain")) {
                     auto *j_rain = yyjson_obj_get(j_currnet, "rain");
                     rt_weathe.precipitation_rain_1h = jsonGetNumberAsStr1dp(j_rain, "1h");
                 }
-                if (jsonHasObject(j_currnet, "snow")) {
+                if (jvh::hasObject(j_currnet, "snow")) {
                     auto *j_snow = yyjson_obj_get(j_currnet, "snow");
                     rt_weathe.precipitation_snow_1h = jsonGetNumberAsStr1dp(j_snow, "1h");
                 }
 
-                rt_weathe.update_time = utils::timestamp_string_time(jsonGetInt64(j_currnet, "dt") + timezone_offset);
+                rt_weathe.update_time = utils::timestamp_string_time(jvh::getSignedInt(j_currnet, "dt") + timezone_offset);
             }
 
             // forecast weather 3d
             auto extractFcWeather = [](yyjson_val *j_daily_fcw, ForecastedWeather &fc_weather) {
                 // weather
                 if (auto *j_weahter = yyjson_obj_get(j_daily_fcw, "weather"); j_weahter != nullptr) {
-                    fc_weather.weather_main = jsonGetStr(j_weahter, "main");
-                    fc_weather.weather_description = jsonGetStr(j_weahter, "description");
-                    fc_weather.weather_icon = jsonGetStr(j_weahter, "icon");
+                    fc_weather.weather_main = jvh::getString(j_weahter, "main");
+                    fc_weather.weather_description = jvh::getString(j_weahter, "description");
+                    fc_weather.weather_icon = jvh::getString(j_weahter, "icon");
                 }
 
                 // temperature
@@ -376,13 +359,13 @@ namespace
 
                 // wind
                 fc_weather.wind_speed = jsonGetNumberAsStr1dp(j_daily_fcw, "wind_speed");
-                fc_weather.wind_direction = getWindDirectionText(jsonGetInt(j_daily_fcw, "wind_deg"));
+                fc_weather.wind_direction = getWindDirectionText(jvh::getInt(j_daily_fcw, "wind_deg"));
 
                 // precipitation
-                if (jsonHasObject(j_daily_fcw, "rain")) {
+                if (jvh::hasObject(j_daily_fcw, "rain")) {
                     fc_weather.precipitation_rain = jsonGetNumberAsStr1dp(j_daily_fcw, "rain");
                 }
-                if (jsonHasObject(j_daily_fcw, "snow")) {
+                if (jvh::hasObject(j_daily_fcw, "snow")) {
                     fc_weather.precipitation_snow = jsonGetNumberAsStr1dp(j_daily_fcw, "snow");
                 }
                 {
@@ -401,11 +384,11 @@ namespace
             if (auto *j_arr_alerts = yyjson_obj_get(j_root, "alerts"); j_arr_alerts != nullptr) {
                 auto extractAlert = [timezone_offset](yyjson_val *j_alert) {
                     return Alert{
-                        .sender = jsonGetStr(j_alert, "sender_name"),
-                        .event = jsonGetStr(j_alert, "event"),
-                        .start_datetime =  utils::timestamp_string(jsonGetInt64(j_alert, "start") + timezone_offset),
-                        .end_datetime = utils::timestamp_string(jsonGetInt64(j_alert, "end") + timezone_offset),
-                        .description = jsonGetStr(j_alert, "description")
+                        .sender = jvh::getString(j_alert, "sender_name"),
+                        .event = jvh::getString(j_alert, "event"),
+                        .start_datetime =  utils::timestamp_string(jvh::getSignedInt(j_alert, "start") + timezone_offset),
+                        .end_datetime = utils::timestamp_string(jvh::getSignedInt(j_alert, "end") + timezone_offset),
+                        .description = jvh::getString(j_alert, "description")
                     };
                 };
 
@@ -429,18 +412,18 @@ namespace
 
         auto *j_local_names = yyjson_obj_get(j_loc, "local_names");
         const std::string lang_code{ tr::txt(tr::TID::LC_OPENWEATHER).substr(0, 2) };
-        if (const auto local_name = jsonGetStr(j_local_names, lang_code.c_str());
+        if (const auto local_name = jvh::getString(j_local_names, lang_code.c_str());
             !local_name.empty()) {
             loc.name = local_name;
         } else {
-            loc.name = jsonGetStr(j_loc, "name");
+            loc.name = jvh::getString(j_loc, "name");
         }
 
         loc.latitude = std::format("{:.4f}", yyjson_get_real(yyjson_obj_get(j_loc, "lat")));
         loc.longitude = std::format("{:.4f}", yyjson_get_real(yyjson_obj_get(j_loc, "lon")));
 
-        auto country = jsonGetStr(j_loc, "country");
-        if (auto state = jsonGetStr(j_loc, "state"); 
+        auto country = jvh::getString(j_loc, "country");
+        if (auto state = jvh::getString(j_loc, "state"); 
             state.empty()) {
             loc.administrative_ownership = country;
         } else {

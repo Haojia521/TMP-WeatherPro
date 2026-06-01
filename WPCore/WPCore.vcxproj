@@ -185,6 +185,7 @@
     <ClInclude Include="AppLocale.h" />
     <ClInclude Include="DataProviderSpiderWeatherComCn.h" />
     <ClInclude Include="DbgMemoryLeak.h" />
+    <ClInclude Include="JsonValueHelper.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="utils.h" />
   </ItemGroup>

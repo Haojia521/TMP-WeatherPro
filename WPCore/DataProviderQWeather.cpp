@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "utils.h"
 #include "AppLocale.h"
+#include "JsonValueHelper.h"
 
 #include <array>
 #include <algorithm>
@@ -70,43 +71,13 @@ namespace
         return token_cache;
     }
 
-    std::string jsonGetStrValue(yyjson_val *j_val, const char *key) {
-        auto *obj = yyjson_obj_get(j_val, key);
-        if (obj == nullptr) return {};
-        
-        return yyjson_get_str(obj);
-    }
-
-    double jsonGetRealValue(yyjson_val *j_val, const char *key) {
-        auto *obj = yyjson_obj_get(j_val, key);
-        if (obj == nullptr) return 0.0;
-        
-        return yyjson_get_real(obj);
-    }
-
-    bool jsonHasObject(yyjson_val *j_val, const char *key) {
-        return yyjson_obj_get(j_val, key) != nullptr;
-    }
-
     std::string formatErrorV2(yyjson_val *j_err)
     {
         auto status = yyjson_get_int(yyjson_obj_get(j_err, "status"));
-        auto title = jsonGetStrValue(j_err, "title");
-        auto detail = jsonGetStrValue(j_err, "detail");
+        auto title = jvh::getString(j_err, "title");
+        auto detail = jvh::getString(j_err, "detail");
 
         return std::format("[{}] {} ({})", status, title, detail);
-    }
-
-    void addParameterToUrl(std::string &url, const std::string &param_key, const std::string &param_value) {
-        if (param_key.empty()) {
-            return;
-        }
-        
-        if (url.find('?') == std::string::npos) {
-            url += '?';
-        }
-
-        url += std::format("&{}={}", param_key, param_value);
     }
 
     bool queryFrame(const std::string &path, const utils::HttpParams &params,
@@ -150,16 +121,16 @@ namespace
 
                 if (status_code == 200) {
                     // compatible with error code v1
-                    if (jsonHasObject(root, "code") && jsonGetStrValue(root, "code") != "200") {
+                    if (jvh::hasObject(root, "code") && jvh::getString(root, "code") != "200") {
                         Logger::instance().error(
-                            std::format("{}: {}", tr::txt(tr::TID::ERR_CODE), jsonGetStrValue(root, "code")));
+                            std::format("{}: {}", tr::txt(tr::TID::ERR_CODE), jvh::getString(root, "code")));
                     } else {
                         func(root);
                         succeed = true;
                     }
                 } else {
                     // compatible with error code v2
-                    if (jsonHasObject(root, "error")) {
+                    if (jvh::hasObject(root, "error")) {
                         Logger::instance().error(formatErrorV2(yyjson_obj_get(root, "error")));
                     } else
                         Logger::instance().error(
@@ -174,6 +145,8 @@ namespace
     }
 
     DataProviderQWeather::RealtimeWeather queryRealtimeWeather(const Location &loc, const DataProviderQWeather::ConfigApp &cfg) {
+        constexpr std::string_view url_path{ "/v7/weather/now" };
+
         DataProviderQWeather::RealtimeWeather rt_weather{};
 
         std::string query;
@@ -183,26 +156,24 @@ namespace
             query = loc.id;
         }
 
-        const std::string url_path{ "/v7/weather/now" };
-
         utils::HttpParams url_params;
         url_params.data.emplace("location", query);
 
         auto func = [&rt_weather](yyjson_val *j_val) {
             auto *now_obj = yyjson_obj_get(j_val, "now");
 
-            rt_weather.temp = jsonGetStrValue(now_obj, "temp");
-            rt_weather.temp_feels_like = jsonGetStrValue(now_obj, "feelsLike");
-            rt_weather.update_time = jsonGetStrValue(now_obj, "obsTime").substr(11, 5);
-            rt_weather.weather_text = jsonGetStrValue(now_obj, "text");
-            rt_weather.weather_code = jsonGetStrValue(now_obj, "icon");
-            rt_weather.wind_direction = jsonGetStrValue(now_obj, "windDir");
-            rt_weather.wind_scale = jsonGetStrValue(now_obj, "windScale");
-            rt_weather.wind_speed = jsonGetStrValue(now_obj, "windSpeed");
-            rt_weather.humidity = jsonGetStrValue(now_obj, "humidity");
+            rt_weather.temp = jvh::getString(now_obj, "temp");
+            rt_weather.temp_feels_like = jvh::getString(now_obj, "feelsLike");
+            rt_weather.update_time = jvh::getString(now_obj, "obsTime").substr(11, 5);
+            rt_weather.weather_text = jvh::getString(now_obj, "text");
+            rt_weather.weather_code = jvh::getString(now_obj, "icon");
+            rt_weather.wind_direction = jvh::getString(now_obj, "windDir");
+            rt_weather.wind_scale = jvh::getString(now_obj, "windScale");
+            rt_weather.wind_speed = jvh::getString(now_obj, "windSpeed");
+            rt_weather.humidity = jvh::getString(now_obj, "humidity");
         };
 
-        if (!queryFrame(url_path, url_params, cfg, func)) {
+        if (!queryFrame(std::string{ url_path }, url_params, cfg, func)) {
             Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
@@ -228,11 +199,11 @@ namespace
                 yyjson_arr_foreach(j_arr_indexes, idx, max, j_aqi_index) {
                     rt_air.indexes.push_back(
                         DataProviderQWeather::AirQualityIndex{
-                            .code = jsonGetStrValue(j_aqi_index, "code"),
-                            .name = jsonGetStrValue(j_aqi_index, "name"),
-                            .aqi = jsonGetStrValue(j_aqi_index, "aqiDisplay"),
-                            .level = jsonGetStrValue(j_aqi_index, "level"),
-                            .category = jsonGetStrValue(j_aqi_index, "category"),
+                            .code = jvh::getString(j_aqi_index, "code"),
+                            .name = jvh::getString(j_aqi_index, "name"),
+                            .aqi = jvh::getString(j_aqi_index, "aqiDisplay"),
+                            .level = jvh::getString(j_aqi_index, "level"),
+                            .category = jvh::getString(j_aqi_index, "category"),
                         });
                 }
             }
@@ -240,8 +211,8 @@ namespace
             auto extractPollutantConcentration = [](yyjson_val *j_val_pc, std::string &str_concentration) {
                 auto *j_concentration = yyjson_obj_get(j_val_pc, "concentration");
                 str_concentration = std::format("{:.2f}{}", 
-                                                jsonGetRealValue(j_concentration, "value"),
-                                                jsonGetStrValue(j_concentration, "unit"));
+                                                jvh::getNumber(j_concentration, "value"),
+                                                jvh::getString(j_concentration, "unit"));
             };
 
             {
@@ -250,7 +221,7 @@ namespace
                 size_t idx, max;
                 yyjson_val *j_pollutant;
                 yyjson_arr_foreach(j_arr_pollutants, idx, max, j_pollutant) {
-                    if (auto code = jsonGetStrValue(j_pollutant, "code");
+                    if (auto code = jvh::getString(j_pollutant, "code");
                         code == "pm2p5") {
                         extractPollutantConcentration(j_pollutant, rt_air.pm2p5);
                         } else if (code == "pm10") {
@@ -268,6 +239,8 @@ namespace
     }
 
     std::array<DataProviderQWeather::ForecastedWeather, 3> queryForcastedWeather3d(const Location &loc, const DataProviderQWeather::ConfigApp &cfg) {
+        constexpr std::string_view url_path{ "/v7/weather/3d" };
+
         std::array<DataProviderQWeather::ForecastedWeather, 3> fc_weather_3d{};
 
         std::string query;
@@ -277,8 +250,6 @@ namespace
             query = loc.id;
         }
 
-        const std::string url_path{ "/v7/weather/3d" };
-
         utils::HttpParams url_params;
         url_params.data.emplace("location", query);
 
@@ -286,14 +257,14 @@ namespace
             auto *daily_arr = yyjson_obj_get(j_val, "daily");
 
             auto getDailyInfo = [](yyjson_val *j_val_day, DataProviderQWeather::ForecastedWeather &w) {
-                w.temp_max = jsonGetStrValue(j_val_day, "tempMax");
-                w.temp_min = jsonGetStrValue(j_val_day, "tempMin");
-                w.weather_day = jsonGetStrValue(j_val_day, "textDay");
-                w.weather_night = jsonGetStrValue(j_val_day, "textNight");
-                w.code_day = jsonGetStrValue(j_val_day, "iconDay");
-                w.code_night = jsonGetStrValue(j_val_day, "iconNight");
-                w.uv_index = jsonGetStrValue(j_val_day, "uvIndex");
-                w.humidity = jsonGetStrValue(j_val_day, "humidity");
+                w.temp_max = jvh::getString(j_val_day, "tempMax");
+                w.temp_min = jvh::getString(j_val_day, "tempMin");
+                w.weather_day = jvh::getString(j_val_day, "textDay");
+                w.weather_night = jvh::getString(j_val_day, "textNight");
+                w.code_day = jvh::getString(j_val_day, "iconDay");
+                w.code_night = jvh::getString(j_val_day, "iconNight");
+                w.uv_index = jvh::getString(j_val_day, "uvIndex");
+                w.humidity = jvh::getString(j_val_day, "humidity");
             };
 
             getDailyInfo(yyjson_arr_get(daily_arr, 0), fc_weather_3d[0]);
@@ -301,7 +272,7 @@ namespace
             getDailyInfo(yyjson_arr_get(daily_arr, 2), fc_weather_3d[2]);
         };
 
-        if (!queryFrame(url_path, url_params, cfg, func)) {
+        if (!queryFrame(std::string{ url_path }, url_params, cfg, func)) {
             Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
         }
 
@@ -327,12 +298,12 @@ namespace
             auto extractAlertInfo = [](yyjson_val *j_val_alt) {
                 DataProviderQWeather::WeatherAlert wa;
 
-                wa.sender_name = jsonGetStrValue(j_val_alt, "senderName");
-                wa.issued_time = jsonGetStrValue(j_val_alt, "issuedTime").substr(0, 16).replace(10, 1, " ");
-                wa.severity = jsonGetStrValue(j_val_alt, "severity");
+                wa.sender_name = jvh::getString(j_val_alt, "senderName");
+                wa.issued_time = jvh::getString(j_val_alt, "issuedTime").substr(0, 16).replace(10, 1, " ");
+                wa.severity = jvh::getString(j_val_alt, "severity");
 
                 yyjson_val *j_color = yyjson_obj_get(j_val_alt, "color");
-                wa.color_code = jsonGetStrValue(j_color, "code");
+                wa.color_code = jvh::getString(j_color, "code");
                 {
                     int r = yyjson_get_int(yyjson_obj_get(j_color, "red"));
                     int g = yyjson_get_int(yyjson_obj_get(j_color, "green"));
@@ -344,9 +315,9 @@ namespace
                     wa.color = std::format("{:x}{:x}{:x}{:x}", r, g, b, a);
                 }
 
-                wa.expire_time = jsonGetStrValue(j_val_alt, "expireTime").substr(0, 16).replace(10, 1, " ");
-                wa.headline = jsonGetStrValue(j_val_alt, "headline");
-                wa.description = jsonGetStrValue(j_val_alt, "description");
+                wa.expire_time = jvh::getString(j_val_alt, "expireTime").substr(0, 16).replace(10, 1, " ");
+                wa.headline = jvh::getString(j_val_alt, "headline");
+                wa.description = jvh::getString(j_val_alt, "description");
 
                 return wa;
             };
@@ -397,9 +368,9 @@ namespace
     }
 
     bool queryLocations(const std::string &query, const DataProviderQWeather::ConfigApp &cfg, Locations &queried_locations) {
-        queried_locations.clear();
+        constexpr std::string_view url_path{ "/geo/v2/city/lookup" };
 
-        const std::string url_path{ "/geo/v2/city/lookup" };
+        queried_locations.clear();
 
         utils::HttpParams url_params;
         url_params.data.emplace("location", query);
@@ -409,12 +380,12 @@ namespace
 
             auto extractLocationInfo = [](yyjson_val *j_val) {
                 return Location{
-                    .id = jsonGetStrValue(j_val, "id"),
-                    .name = jsonGetStrValue(j_val, "name"),
+                    .id = jvh::getString(j_val, "id"),
+                    .name = jvh::getString(j_val, "name"),
                     .administrative_ownership =
-                        std::format("{}-{}", jsonGetStrValue(j_val, "adm2"), jsonGetStrValue(j_val, "adm1")),
-                    .longitude = jsonGetStrValue(j_val, "lon"),
-                    .latitude = jsonGetStrValue(j_val, "lat"),
+                        std::format("{}-{}", jvh::getString(j_val, "adm2"), jvh::getString(j_val, "adm1")),
+                    .longitude = jvh::getString(j_val, "lon"),
+                    .latitude = jvh::getString(j_val, "lat"),
                 };
             };
 
@@ -425,7 +396,7 @@ namespace
             }
         };
 
-        if (queryFrame(url_path, url_params, cfg, func)) {
+        if (queryFrame(std::string{ url_path }, url_params, cfg, func)) {
             return true;
         }
 

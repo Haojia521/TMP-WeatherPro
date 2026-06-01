@@ -2,6 +2,7 @@
 #include "AppLocale.h"
 #include "Logger.h"
 #include "utils.h"
+#include "JsonValueHelper.h"
 
 #include <functional>
 #include <regex>
@@ -66,7 +67,7 @@ namespace
     } };
 
     constexpr std::string_view convWeatherTextToCode(std::string_view text) {
-        auto itr = std::ranges::find_if(
+        const auto itr = std::ranges::find_if(
             WTC_MAPPING_TABLE,
             [text](const WeatherTextCodePair &p) { return p.text == text; }
         );
@@ -107,27 +108,23 @@ namespace
         return results;
     }
 
-    std::string jsonGetStr(yyjson_val *j_val, const char *key) {
-        return yyjson_get_str(yyjson_obj_get(j_val, key));
-    }
-
     constexpr std::string_view AGENT{ "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0" };
 
-    bool queryFrame(const std::string &host, const std::string &path, utils::HttpParams &params, utils::HttpHeaders &headers,
+    bool queryFrame(std::string_view host, std::string_view path, const utils::HttpParams &params, utils::HttpHeaders &headers,
                     const std::function<bool(const std::string &)> &func) {
         std::string content;
 
         headers.data.emplace("user-agent", AGENT);
 
-        auto status_code = utils::internetGetWithRetry(host, path, content, params, headers);
+        auto status_code = utils::internetGetWithRetry(std::string{ host }, std::string{ path }, content, params, headers);
 
         if (!content.empty()) {
             return func(content);
-        } else {
-            Logger::instance().error(std::format("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE)));
-            return false;
         }
+
+        Logger::instance().error(std::format("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE)));
+        return false;
     }
 
     using RealtimeWeather = DataProviderSpiderWeatherComCn::RealtimeWeather;
@@ -160,16 +157,16 @@ namespace
             if (doc != nullptr) {
                 auto *root = yyjson_doc_get_root(doc.get());
 
-                rt_weather.temp = jsonGetStr(root, "temp");
-                rt_weather.weather_text = jsonGetStr(root, "weather");
-                rt_weather.weather_code = jsonGetStr(root, "weathercode");
-                rt_weather.wind_direction = jsonGetStr(root, "WD");
-                rt_weather.wind_strength = jsonGetStr(root, "WS");
-                rt_weather.wind_speed = jsonGetStr(root, "wse");
-                rt_weather.humidity = jsonGetStr(root, "SD");
-                rt_weather.aqi = jsonGetStr(root, "aqi");
-                rt_weather.pm2p5 = jsonGetStr(root, "aqi_pm25");
-                rt_weather.update_time = jsonGetStr(root, "time");
+                rt_weather.temp = jvh::getString(root, "temp");
+                rt_weather.weather_text = jvh::getString(root, "weather");
+                rt_weather.weather_code = jvh::getString(root, "weathercode");
+                rt_weather.wind_direction = jvh::getString(root, "WD");
+                rt_weather.wind_strength = jvh::getString(root, "WS");
+                rt_weather.wind_speed = jvh::getString(root, "wse");
+                rt_weather.humidity = jvh::getString(root, "SD");
+                rt_weather.aqi = jvh::getString(root, "aqi");
+                rt_weather.pm2p5 = jvh::getString(root, "aqi_pm25");
+                rt_weather.update_time = jvh::getString(root, "time");
 
                 // correct weather code to 'night' if time during 20:00 to 06:00
                 if (const auto h = std::stoi(rt_weather.update_time.substr(0, 2));
@@ -184,7 +181,7 @@ namespace
             }
         };
 
-        if (!queryFrame(std::string{ url_host }, url_path, params, headers, func)) {
+        if (!queryFrame(url_host, url_path, params, headers, func)) {
             Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
@@ -227,8 +224,8 @@ namespace
                     };
 
                     rt_weather.temp = toWString1dp(yyjson_get_real(yyjson_obj_get(root, "temp")));
-                    rt_weather.update_time = jsonGetStr(root, "time");
-                    rt_weather.weather_text = jsonGetStr(root, "weather");
+                    rt_weather.update_time = jvh::getString(root, "time");
+                    rt_weather.weather_text = jvh::getString(root, "weather");
                     rt_weather.weather_code = convWeatherTextToCode(rt_weather.weather_text);
 
                     // correct weather code to 'night' if time during 20:00 to 06:00
@@ -237,7 +234,7 @@ namespace
                     }
 
                     {   // extract wind infomation
-                        const auto &wind = jsonGetStr(root, "wind");
+                        const auto &wind = jvh::getString(root, "wind");
                         if (const auto sep_idx = wind.find(' '); sep_idx != std::wstring::npos) {
                             rt_weather.wind_direction = wind.substr(0, sep_idx);
                             rt_weather.wind_strength = wind.substr(sep_idx + 1);
@@ -263,7 +260,7 @@ namespace
             return false;
         };
 
-        if (!queryFrame(std::string{ url_host }, url_path, params, headers, func)) {
+        if (!queryFrame(url_host, url_path, params, headers, func)) {
             Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
@@ -273,9 +270,9 @@ namespace
     auto queryRealtimeWeather(const std::string &code) {
         if (code.size() == 9) {
             return queryRealtimeWeatherCity(code);
-        } else {
-            return queryRealtimeWeatherTownOrStreet(code);
         }
+
+        return queryRealtimeWeatherTownOrStreet(code);
     }
 
     auto queryForecastedWeather(const std::string &code) {
@@ -380,11 +377,11 @@ namespace
 
                 auto extractAlertInfo = [](yyjson_val *j_val) {
                     return WeatherAlert{
-                        .type = jsonGetStr(j_val, "w5"),
-                        .level = jsonGetStr(j_val, "w7"),
-                        .title = jsonGetStr(j_val, "w13"),
-                        .description = jsonGetStr(j_val, "w9"),
-                        .publish_time = jsonGetStr(j_val, "w8"),
+                        .type = jvh::getString(j_val, "w5"),
+                        .level = jvh::getString(j_val, "w7"),
+                        .title = jvh::getString(j_val, "w13"),
+                        .description = jvh::getString(j_val, "w9"),
+                        .publish_time = jvh::getString(j_val, "w8"),
                     };
                 };
 
@@ -427,8 +424,8 @@ namespace
     bool queryLocations(const std::string &query, Locations &queried_locations) {
         queried_locations.clear();
 
-        constexpr std::string_view url_host = "https://toy1.weather.com.cn";
-        const std::string url_path{ "/search" };
+        constexpr std::string_view url_host{ "https://toy1.weather.com.cn" };
+        constexpr std::string_view url_path{ "/search" };
 
         utils::HttpParams params;
         params.data.emplace("cityname", query);
@@ -469,7 +466,7 @@ namespace
             return true;
         };
 
-        if (queryFrame(std::string{ url_host }, url_path, params, headers, func)) {
+        if (queryFrame(std::string{ url_host }, std::string{ url_path }, params, headers, func)) {
             return true;
         }
 
@@ -495,13 +492,13 @@ namespace
     bool getLocation(Location &loc) {
         loc = {};
         constexpr std::string_view url_host{ "https://wgeo.weather.com.cn" };
-
-        auto milliseconds_count = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
-        ).count();
-        const std::string url_path{ "/ip/" };
+        constexpr std::string_view url_path{ "/ip/" };
 
         utils::HttpParams params;
+
+        const auto milliseconds_count = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()
+        ).count();
         params.data.emplace("_", std::to_string(milliseconds_count));
 
         utils::HttpHeaders headers;
@@ -530,12 +527,12 @@ namespace
             if (loc.id.empty() || loc.name.empty()) {
                 Logger::instance().error(std::format("Parsing locaiton Fialed: {}", content));
                 return false;
-            } else {
-                return true;
             }
+            
+            return true;
         };
 
-        if (!queryFrame(std::string{ url_host }, url_path, params, headers, func)) {
+        if (!queryFrame(url_host, url_path, params, headers, func)) {
             Logger::instance().error("Failed to query location from website");
         }
 
