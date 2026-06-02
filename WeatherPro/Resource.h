@@ -78,6 +78,8 @@
 #define IDS_OPT_QW_OPEN_PUB_KEY_FAILED  1028
 #define IDC_STATIC_JWT_PRV_KEY_FILEPATH 1029
 #define IDS_UNITS_STANDARD              1029
+#define IDB_PNG1                        1029
+#define IDB_PNG_LOADING_SIZE32          1029
 #define IDC_BUTTON_CREATE_KEY_PAIR      1030
 #define IDS_UNITS_METRIC                1030
 #define IDC_BUTTON_SELECT_KEY_PAIR      1031
@@ -142,7 +144,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        1029
+#define _APS_NEXT_RESOURCE_VALUE        1030
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1071
 #define _APS_NEXT_SYMED_VALUE           1000

@@ -273,6 +273,7 @@
     <Image Include="res\icons-qw-hollow-32x32.png" />
     <Image Include="res\icons-wcc-32x32.png" />
     <Image Include="res\loading-frames-16.png" />
+    <Image Include="res\loading-frames-32.png" />
     <Image Include="res\ow-32.png" />
     <Image Include="res\QR_AliPay.bmp" />
     <Image Include="res\QR_WeChat.bmp" />

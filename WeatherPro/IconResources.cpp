@@ -278,7 +278,7 @@ void IconSheetManager::LoadIconResources() {
     // loading frame icons
     {
         auto icons_loading = std::make_shared<IconSheet>();
-        icons_loading->Load(IDB_PNG_LOADING, 16, 16, 0);
+        icons_loading->Load(IDB_PNG_LOADING_SIZE32, 32, 32, 4);
         icon_resources_[IconResType::Loading] = icons_loading;
     }
 
