@@ -2,9 +2,9 @@
 
 #include <format>
 
-std::string Location::getFormattedString() const {
+std::string Location::getFormattedString(bool format_geo_coords/* = true*/) const {
     std::string geo_coord;
-    if (!longitude.empty() && !latitude.empty()) {
+    if (format_geo_coords && !longitude.empty() && !latitude.empty()) {
         geo_coord = std::format("[{}, {}]", longitude, latitude);
     }
 

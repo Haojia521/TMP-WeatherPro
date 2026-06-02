@@ -6,6 +6,7 @@
 
 #include <array>
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <fstream>
 #include <sstream>
@@ -78,6 +79,20 @@ namespace
         auto detail = jvh::getString(j_err, "detail");
 
         return std::format("[{}] {} ({})", status, title, detail);
+    }
+
+    std::string timestamp_string_hhmm(std::int64_t sec) {
+        using namespace std::chrono;
+
+        const auto tp = sys_seconds{ seconds{sec} };
+        const auto day_time = tp - floor<days>(tp);
+        return std::format("{:%R}", hh_mm_ss{ day_time });
+    }
+
+    std::string timestamp_string_yyyymmdd_hhmm(std::int64_t sec) {
+        using namespace std::chrono;
+
+        return std::format("{:%F %R}", sys_seconds{ seconds{sec} });
     }
 
     bool queryFrame(const std::string &path, const utils::HttpParams &params,
@@ -164,7 +179,11 @@ namespace
 
             rt_weather.temp = jvh::getString(now_obj, "temp");
             rt_weather.temp_feels_like = jvh::getString(now_obj, "feelsLike");
-            rt_weather.update_time = jvh::getString(now_obj, "obsTime").substr(11, 5);
+            rt_weather.update_time = timestamp_string_hhmm(
+                utils::parse_iso_datetime_to_local_seconds(
+                    jvh::getString(now_obj, "obsTime")
+                )
+            );
             rt_weather.weather_text = jvh::getString(now_obj, "text");
             rt_weather.weather_code = jvh::getString(now_obj, "icon");
             rt_weather.wind_direction = jvh::getString(now_obj, "windDir");
@@ -299,7 +318,11 @@ namespace
                 DataProviderQWeather::WeatherAlert wa;
 
                 wa.sender_name = jvh::getString(j_val_alt, "senderName");
-                wa.issued_time = jvh::getString(j_val_alt, "issuedTime").substr(0, 16).replace(10, 1, " ");
+                wa.issued_time = timestamp_string_yyyymmdd_hhmm(
+                    utils::parse_iso_datetime_to_local_seconds(
+                        jvh::getString(j_val_alt, "issuedTime")
+                    )
+                );
                 wa.severity = jvh::getString(j_val_alt, "severity");
 
                 yyjson_val *j_color = yyjson_obj_get(j_val_alt, "color");
@@ -315,7 +338,11 @@ namespace
                     wa.color = std::format("{:x}{:x}{:x}{:x}", r, g, b, a);
                 }
 
-                wa.expire_time = jvh::getString(j_val_alt, "expireTime").substr(0, 16).replace(10, 1, " ");
+                wa.expire_time = timestamp_string_yyyymmdd_hhmm(
+                    utils::parse_iso_datetime_to_local_seconds(
+                        jvh::getString(j_val_alt, "expireTime")
+                    )
+                );
                 wa.headline = jvh::getString(j_val_alt, "headline");
                 wa.description = jvh::getString(j_val_alt, "description");
 
