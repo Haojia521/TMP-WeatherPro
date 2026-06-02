@@ -181,9 +181,8 @@ int PinnedItem::OnMouseEvent(MouseEventType type, int x, int y, void* hWnd, int 
     AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
     if (type == MouseEventType::MT_DBCLICKED) {
-        const auto &cfg = DataManager::Instance().GetConfig();
-
-        if (cfg.double_click_action == DataManager::LDoubleClickAction::OpenSettingWindow) {
+        if (const auto &cfg = DataManager::Instance().GetConfig();
+            cfg.double_click_action == DataManager::LDoubleClickAction::OpenSettingWindow) {
             WeatherPro::Instance().ShowOptionsDialog(hWnd);
         } else {
             WeatherPro::Instance().UpdateWeather(true);

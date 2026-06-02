@@ -8,6 +8,7 @@
 
 #include <mutex>
 #include <memory>
+#include <optional>
 
 namespace 
 {
@@ -21,156 +22,373 @@ namespace
     constexpr DWORD TS_STOP_PAUSE_MS{ 2000 };      // pause duration (in milliseconds) after each round of scrolling end
     constexpr int TS_LOOPS_BEFORE_STOP{ 2 };       // number loops of each round of scrolling
 
-    struct TextScrollingState
+    class ScrollableText
     {
-        CString text;
+    public:
+        void SetText(const CString &text) {
+            if (scrolling_state_.text == text)
+                return;
 
-        int text_width = 0;
-        int text_height = 0;
+            scrolling_state_.text = text;
 
-        bool need_scroll = false;
-        bool metrics_valid = false;
+            scrolling_state_.text_width = 0;
+            scrolling_state_.text_height = 0;
 
-        CSize last_draw_size{ 0, 0 };
+            scrolling_state_.need_scroll = false;
+            scrolling_state_.metrics_valid = false;
 
-        QWORD start_tick = 0;
+            scrolling_state_.last_draw_size = CSize(0, 0);
+            scrolling_state_.start_tick = ::GetTickCount64();
+        }
+
+        void Draw(CDC &dc, const CRect &rc, bool text_align_right) {
+            if (scrolling_state_.text.IsEmpty() || rc.IsRectEmpty())
+                return;
+
+            UpdateMetrics(dc, rc);
+
+            const CString text = scrolling_state_.text;
+            const int text_width = scrolling_state_.text_width;
+            const int text_height = scrolling_state_.text_height;
+            const bool need_scroll = scrolling_state_.need_scroll;
+
+            dc.SaveDC();
+
+            dc.IntersectClipRect(rc);
+            dc.SetBkMode(TRANSPARENT);
+
+            const int text_y = rc.top + (rc.Height() - text_height) / 2;
+
+            if (!need_scroll) {
+                if (text_align_right) {
+                    dc.TextOutW(rc.left + (rc.Width() - text_width), text_y, text);
+                } else {
+                    dc.TextOutW(rc.left, text_y, text);
+                }
+                dc.RestoreDC(-1);
+                return;
+            }
+
+            const int offset_x = CalcOffset();
+            //const int text_x = rc.left - offset_x;
+            const int base_x = rc.right - text_width;
+            const int text_x = base_x - offset_x;
+
+            dc.TextOut(text_x, text_y, text);
+
+            dc.TextOut(
+                text_x + text_width + TS_GAP_PIXELS,
+                text_y,
+                text
+            );
+
+            dc.RestoreDC(-1);
+        }
+
+    private:
+        struct TextScrollingState
+        {
+            CString text;
+
+            int text_width = 0;
+            int text_height = 0;
+
+            CSize last_draw_size{ 0, 0 };
+            QWORD start_tick = 0;
+
+            bool need_scroll = false;
+            bool metrics_valid = false;
+        };
+
+        [[nodiscard]]
+        int CalcOffset() const {
+            if (!scrolling_state_.need_scroll)
+                return 0;
+
+            const int reset_width =
+                scrolling_state_.text_width + TS_GAP_PIXELS;
+
+            if (reset_width <= 0)
+                return 0;
+
+            const auto now = ::GetTickCount64();
+            const auto elapsed = now - scrolling_state_.start_tick;
+
+            const auto one_loop_ms = static_cast<QWORD>(
+                static_cast<long long>(reset_width) * 1000 / TS_PIXELS_PER_SECOND
+                );
+
+            const auto moving_phase_ms = one_loop_ms * TS_LOOPS_BEFORE_STOP;
+
+            const auto total_cycle_ms = TS_INITIAL_PAUSE_MS + moving_phase_ms + TS_STOP_PAUSE_MS;
+
+            if (total_cycle_ms == 0)
+                return 0;
+
+            const auto cycle_elapsed = elapsed % total_cycle_ms;
+
+            // 每个大周期开始时，先完整显示一会儿
+            if (cycle_elapsed < TS_INITIAL_PAUSE_MS)
+                return 0;
+
+            const auto moving_elapsed =
+                cycle_elapsed - TS_INITIAL_PAUSE_MS;
+
+            // 滚动 N 圈结束后，停在初始位置几秒
+            if (moving_elapsed >= moving_phase_ms)
+                return 0;
+
+            int offset = static_cast<int>(
+                static_cast<long long>(moving_elapsed) * TS_PIXELS_PER_SECOND / 1000
+                );
+
+            offset %= reset_width;
+
+            return offset;
+        }
+
+        void UpdateMetrics(const CDC &dc, const CRect &rc) {
+            const CSize draw_size = rc.Size();
+
+            if (scrolling_state_.metrics_valid &&
+                scrolling_state_.last_draw_size == draw_size)
+            {
+                return;
+            }
+
+            const CSize text_size = dc.GetTextExtent(scrolling_state_.text);
+
+            scrolling_state_.text_width = text_size.cx;
+            scrolling_state_.text_height = text_size.cy;
+
+            scrolling_state_.need_scroll = scrolling_state_.text_width > rc.Width();
+
+            scrolling_state_.last_draw_size = draw_size;
+            scrolling_state_.metrics_valid = true;
+
+            scrolling_state_.start_tick = ::GetTickCount64();
+        }
+
+        TextScrollingState scrolling_state_;
     };
 
-    TextScrollingState text_scrolling_state;
+    enum class IconKind {
+        None,
+        Loading,
+        Weather
+    };
 
-    void SetText(const CString &text) {
-        if (text_scrolling_state.text == text)
-            return;
+    struct IconModel {
+        IconKind kind{ IconKind::None };
+        int weather_icon_index{ 0 };
+    };
 
-        text_scrolling_state.text = text;
+    struct TextModel {
+        CString line1;
+        CString line2;
+        bool scroll{ false };
+    };
 
-        text_scrolling_state.text_width = 0;
-        text_scrolling_state.text_height = 0;
+    struct RenderModel {
+        TextModel text;
+        IconModel icon;
+        bool draw_notification_dot{ false };
+    };
 
-        text_scrolling_state.need_scroll = false;
-        text_scrolling_state.metrics_valid = false;
+    struct LayoutResult {
+        bool dual_line{ false };
 
-        text_scrolling_state.last_draw_size = CSize(0, 0);
-        text_scrolling_state.start_tick = ::GetTickCount64();
-    }
+        std::optional<CRect> icon_rect;
+        std::array<CRect, 2> text_rects;
+    };
 
-    int CalcOffset() {
-        if (!text_scrolling_state.need_scroll)
-            return 0;
+    RenderModel BuildRenderModel(bool is_updating, bool dual_line,
+                                 const DataManager::Snapshot* data_snapshot,
+                                 const WeatherApi& api,
+                                 const DataManager::Config& cfg) {
+        RenderModel model;
 
-        const int reset_width =
-            text_scrolling_state.text_width + TS_GAP_PIXELS;
+        if (is_updating) {
+            model.text.line1 = dual_line ? CString{} : cmn::GetStringRes(IDS_UPDATING);
+            model.text.line2 = dual_line ? cmn::GetStringRes(IDS_UPDATING) : CString{};
 
-        if (reset_width <= 0)
-            return 0;
+            if (cfg.draw_weather_icon) {
+                model.icon.kind = IconKind::Loading;
+            }
 
-        const auto now = ::GetTickCount64();
-        const auto elapsed = now - text_scrolling_state.start_tick;
-
-        const auto one_loop_ms = static_cast<QWORD>(
-            static_cast<long long>(reset_width) * 1000 / TS_PIXELS_PER_SECOND
-            );
-
-        const auto moving_phase_ms = one_loop_ms * TS_LOOPS_BEFORE_STOP;
-
-        const auto total_cycle_ms = TS_INITIAL_PAUSE_MS + moving_phase_ms + TS_STOP_PAUSE_MS;
-
-        if (total_cycle_ms == 0)
-            return 0;
-
-        const auto cycle_elapsed = elapsed % total_cycle_ms;
-
-        // 每个大周期开始时，先完整显示一会儿
-        if (cycle_elapsed < TS_INITIAL_PAUSE_MS)
-            return 0;
-
-        const auto moving_elapsed =
-            cycle_elapsed - TS_INITIAL_PAUSE_MS;
-
-        // 滚动 N 圈结束后，停在初始位置几秒
-        if (moving_elapsed >= moving_phase_ms)
-            return 0;
-
-        int offset = static_cast<int>(
-            static_cast<long long>(moving_elapsed) * TS_PIXELS_PER_SECOND / 1000
-            );
-
-        offset %= reset_width;
-
-        return offset;
-    }
-
-    void UpdateMetrics(const CDC &dc, const CRect &rc) {
-        const CSize draw_size = rc.Size();
-
-        if (text_scrolling_state.metrics_valid &&
-            text_scrolling_state.last_draw_size == draw_size)
-        {
-            return;
+            return model;
         }
 
-        const CSize text_size = dc.GetTextExtent(text_scrolling_state.text);
-
-        text_scrolling_state.text_width = text_size.cx;
-        text_scrolling_state.text_height = text_size.cy;
-
-        text_scrolling_state.need_scroll = text_scrolling_state.text_width > rc.Width();
-
-        text_scrolling_state.last_draw_size = draw_size;
-        text_scrolling_state.metrics_valid = true;
-
-        text_scrolling_state.start_tick = ::GetTickCount64();
-    }
-
-    void DrawTextScrolling(CDC &dc, const CRect &rc, bool dark_mode) {
-        if (text_scrolling_state.text.IsEmpty() || rc.IsRectEmpty())
-            return;
-
-        UpdateMetrics(dc, rc);
-
-        const CString text = text_scrolling_state.text;
-        const int text_width = text_scrolling_state.text_width;
-        const int text_height = text_scrolling_state.text_height;
-        const bool need_scroll = text_scrolling_state.need_scroll;
-
-        dc.SaveDC();
-
-        dc.IntersectClipRect(rc);
-        dc.SetBkMode(TRANSPARENT);
-
-        dc.SetTextColor(
-            dark_mode ? RGB(230, 230, 230) : RGB(30, 30, 30)
-        );
-
-        const int text_y = rc.top + (rc.Height() - text_height) / 2;
-
-        if (!need_scroll) {
-            dc.TextOut(rc.left + (rc.Width() - text_width), text_y, text);
-            dc.RestoreDC(-1);
-            return;
+        if (dual_line) {
+            model.text.line1 = data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::WEATHER_TEXT);
+            model.text.line2 = data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE);
+        } else {
+            if (cfg.draw_weather_icon) {
+                model.text.line1 = data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE);
+            } else {
+                model.text.line1.Format(
+                    L"%s %s",
+                    data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::WEATHER_TEXT),
+                    data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE)
+                );
+            }
         }
 
-        const int offset_x = CalcOffset();
-        //const int text_x = rc.left - offset_x;
-        const int base_x = rc.right - text_width;
-        const int text_x = base_x - offset_x;
+        if (cfg.draw_weather_icon) {
+            if (const auto *weather_icons = api.GetWeatherIcons();
+                weather_icons != nullptr) {
+                const std::wstring weather_code{
+                    data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::WEATHER_CODE)
+                };
 
-        dc.TextOut(text_x, text_y, text);
+                model.icon.kind = IconKind::Weather;
+                model.icon.weather_icon_index = api.GetWeatherIconIndex(weather_code);
+            }
+        }
 
-        dc.TextOut(
-            text_x + text_width + TS_GAP_PIXELS,
-            text_y,
-            text
-        );
+        model.draw_notification_dot =
+            cfg.draw_weather_icon &&
+            cfg.draw_alerts_notification_dot &&
+            !std::wstring_view{
+                data_snapshot->GetWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::ALERTS)
+            }.empty();
 
-        dc.RestoreDC(-1);
+        model.text.scroll = cfg.main_item_scroll_text;
+
+        return model;
+    }
+
+    LayoutResult BuildLayout(int x, int y, int w, int h, bool dual_line, bool has_icon, int taskbar_wnd_dpi) {
+        LayoutResult layout;
+        layout.dual_line = dual_line;
+
+        const auto icon_text_gap = CalcPixelSize(taskbar_wnd_dpi, 4);
+        const auto pixel_size_16 = CalcPixelSize(taskbar_wnd_dpi, 16);
+        const auto pixel_size_32 = CalcPixelSize(taskbar_wnd_dpi, 32);
+
+        int text_left = x;
+
+        if (has_icon) {
+            const auto icon_size = dual_line ? pixel_size_32 : pixel_size_16;
+            const auto icon_y = y + std::max(0, h - icon_size) / 2;
+
+            CRect rc_icon{
+                x,
+                icon_y,
+                x + icon_size,
+                icon_y + icon_size
+            };
+
+            layout.icon_rect = rc_icon;
+            text_left = rc_icon.right + icon_text_gap;
+        }
+
+        if (dual_line) {
+            const auto text_y_offset = h / 2 - pixel_size_16;
+
+            CRect rc_line1{
+                text_left,
+                y + text_y_offset,
+                x + w,
+                y + text_y_offset + pixel_size_16
+            };
+
+            CRect rc_line2{
+                text_left,
+                rc_line1.bottom + 1,
+                x + w,
+                rc_line1.bottom + pixel_size_16 + 1
+            };
+
+            layout.text_rects[0] = rc_line1;
+            layout.text_rects[1] = rc_line2;
+        } else {
+            CRect rc_text{
+                text_left,
+                y,
+                x + w,
+                y + h
+            };
+
+            layout.text_rects[0] = rc_text;
+        }
+
+        return layout;
+    }
+
+    void DrawIcon(CDC& dc, const CRect& rc_icon, const IconModel& icon, const WeatherApi& api) {
+        static int loading_frame_idx{ 0 };
+
+        switch (icon.kind) {
+            case IconKind::None:
+                return;
+
+            case IconKind::Loading: {
+                const auto *icon_res = IconSheetManager::Instance().GetIconSheet(IconResType::Loading);
+                if (icon_res == nullptr) {
+                    return;
+                }
+
+                icon_res->Draw(&dc, rc_icon, loading_frame_idx);
+                loading_frame_idx = (loading_frame_idx + 1) % icon_res->GetMaxCount();
+                return;
+            }
+
+            case IconKind::Weather: {
+                const auto* icon_res = api.GetWeatherIcons();
+                if (icon_res == nullptr) {
+                    return;
+                }
+
+                icon_res->Draw(&dc, rc_icon, icon.weather_icon_index);
+                return;
+            }
+        }
+    }
+
+    ScrollableText scrollable_text_line1, scrollable_text_line2;
+
+    void DrawTexts(CDC& dc, const TextModel& text, const LayoutResult& layout,
+                   bool text_align_right) {
+        auto dt_flag = DT_VCENTER | DT_SINGLELINE;
+
+        if (text_align_right) {
+            dt_flag |= DT_RIGHT;
+        }
+
+        if (layout.dual_line) {
+            CRect rc_line1 = layout.text_rects[0];
+            CRect rc_line2 = layout.text_rects[1];
+
+            if (text.scroll) {
+                scrollable_text_line1.SetText(text.line1);
+                scrollable_text_line1.Draw(dc, rc_line1, text_align_right);
+                
+                scrollable_text_line2.SetText(text.line2);
+                scrollable_text_line2.Draw(dc, rc_line2, text_align_right);
+            } else {
+                dc.DrawTextW(text.line1, rc_line1, dt_flag);
+                dc.DrawTextW(text.line2, rc_line2, dt_flag);
+            }
+        } else {
+            CRect rc_text = layout.text_rects[0];
+
+            if (text.scroll) {
+                scrollable_text_line1.SetText(text.line1);
+                scrollable_text_line1.Draw(dc, rc_text, text_align_right);
+
+                scrollable_text_line2.SetText(CString{});
+            }else {
+                dc.DrawTextW(text.line1, rc_text, dt_flag);
+            }
+        }
     }
 
     // draw a red dot on icon upper-right corner
     void DrawNotificationDot(CDC &dc, const CRect &icon_rc)
     {
-        auto icon_size = std::min(icon_rc.Height(), icon_rc.Width());
-        auto dot_size = icon_size / 3;
+        const auto icon_size = std::min(icon_rc.Height(), icon_rc.Width());
+        const auto dot_size = icon_size / 3;
 
         CRect dot_rc{
             icon_rc.right - dot_size,
@@ -222,21 +440,13 @@ namespace
         }
 
         CBorrowedCDC(const CBorrowedCDC&) = delete;
+        CBorrowedCDC(CBorrowedCDC&&) = delete;
         CBorrowedCDC& operator=(const CBorrowedCDC&) = delete;
+        CBorrowedCDC& operator=(CBorrowedCDC&&) = delete;
 
         CDC& get()
         {
             return m_dc;
-        }
-
-        CDC* get_ptr()
-        {
-            return &m_dc;
-        }
-
-        bool valid() const
-        {
-            return m_hdc != nullptr && m_dc.GetSafeHdc() != nullptr;
         }
 
     private:
@@ -273,125 +483,68 @@ bool MainItem::IsCustomDraw() const {
 }
 
 int MainItem::GetItemWidth() const {
-    // 60 pixels under 96 dpi
-    return 60;
+    return dual_line_mode ? 80 : 60;
 }
 
 int MainItem::GetItemWidthEx(void* hDC) const {
-    const auto &cfg = DataManager::Instance().GetConfig();
-
-    if (!cfg.main_item_scroll_text) {
-        HDC raw_dc = static_cast<HDC>(hDC);
-        if (raw_dc == nullptr)
-            return 0;
-
-        const auto data_snapshot = DataManager::GetSnapshot();
-        if (data_snapshot == nullptr) {
-            return 0;
-        }
-
-        CString text;
-        int icon_width{ 0 };
-        if (cfg.draw_weather_icon) {
-            icon_width = CalcPixelSize(taskbar_wnd_dpi, 20);
-            text = data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE);
-        } else {
-            text.Format(L"%s %s",
-                        data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::WEATHER_TEXT),
-                        data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE));
-        }
-
-        SIZE size{};
-        if (!::GetTextExtentPoint32(raw_dc, text, text.GetLength(), &size)) {
-            return 0;
-        }
-        auto text_width = size.cx;
-
-        return text_width + icon_width;
+    if (const auto &cfg = DataManager::Instance().GetConfig();
+        !cfg.main_item_scroll_text) {
+        return real_width;
     }
-
-    return 0;
+    
+    auto max_width = CalcPixelSize(taskbar_wnd_dpi, GetItemWidth());
+    return std::min(max_width, real_width);
 }
 
 void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
-    if (hDC == nullptr || w <= 0 || h <= 0)
+    if (hDC == nullptr || w <= 0 || h <= 0) {
         return;
+    }
 
     const auto is_updating = DataManager::IsUpdating();
     const auto data_snapshot = DataManager::GetSnapshot();
-    if (!is_updating && !(data_snapshot != nullptr && data_snapshot->GetWeatherData() != nullptr)) {
+
+    if (!is_updating && data_snapshot == nullptr) {
         return;
     }
 
     CBorrowedCDC borrowed_dc{ static_cast<HDC>(hDC) };
 
-    CRect rc_text(x, y, x + w, y + h);
+    const auto& api = DataManager::Instance().GetApi();
+    const auto& cfg = DataManager::Instance().GetConfig();
 
-    const auto &api = DataManager::Instance().GetApi();
-    const auto &cfg = DataManager::Instance().GetConfig();
-    CString text;
-    
-    // draw weather icon
-    if (cfg.draw_weather_icon) {
-        // adjust rects for icon and text
-        const auto icon_size = CalcPixelSize(taskbar_wnd_dpi, 16);
-        const auto icon_text_gap = CalcPixelSize(taskbar_wnd_dpi, 4);
+    const auto pixel_size_32 = CalcPixelSize(taskbar_wnd_dpi, 32);
 
-        auto icon_y = y + ((h - icon_size) > 0 ? (h - icon_size) / 2 : 0);
-        CRect rc_icon(x, icon_y, x + icon_size, icon_y + icon_size);
-        rc_text.left = rc_icon.right + icon_text_gap;
+    // 这里以后可以替换为 cfg.dual_line_mode && h >= pixel_size_32
+    // todo: check configs that dual-line-mode is enabled
+    const bool should_use_dual_line = h >= pixel_size_32;
 
-        if (is_updating) {
-            if (auto icon_res = IconSheetManager::Instance().GetIconSheet(IconResType::Loading);
-                icon_res != nullptr) {
-                static int loading_frame_idx{ 0 };
-                
-                icon_res->Draw(borrowed_dc.get_ptr(), rc_icon, loading_frame_idx);
-                loading_frame_idx = (++loading_frame_idx) % icon_res->GetMaxCount();
-            }
+    dual_line_mode = should_use_dual_line;
 
-            text = cmn::GetStringRes(IDS_UPDATING);
-        } else {
-            // only draw text of temperature
-            text = data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE);
+    const auto *snapshot_ptr = data_snapshot.get();
+    auto model = BuildRenderModel(is_updating, should_use_dual_line, snapshot_ptr, api, cfg);
 
-            if (const auto *icon_res = api.GetWeatherIcons();
-                icon_res != nullptr) {
-                auto weather_code = data_snapshot->GetWeatherData()->getWeatherItem(cfg.time_slot, WeatherItem::WEATHER_CODE);
-                icon_res->Draw(borrowed_dc.get_ptr(), rc_icon, api.GetWeatherIconIndex(weather_code));
-            }
+    const bool has_icon = model.icon.kind != IconKind::None;
+    auto layout = BuildLayout(x, y, w, h, should_use_dual_line, has_icon, taskbar_wnd_dpi);
 
-            if (cfg.draw_alerts_notification_dot &&
-                !data_snapshot->GetWeatherData()->getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::ALERTS).empty()) {
-                DrawNotificationDot(borrowed_dc.get(), rc_icon);
-            }
+    real_width = std::max(borrowed_dc.get().GetTextExtent(model.text.line1).cx,
+                          borrowed_dc.get().GetTextExtent(model.text.line2).cx);
+
+    if (layout.icon_rect.has_value()) {
+        DrawIcon(borrowed_dc.get(), *layout.icon_rect, model.icon, api);
+
+        if (model.draw_notification_dot) {
+            DrawNotificationDot(borrowed_dc.get(), *layout.icon_rect);
         }
-    } else {
-        if (is_updating) {
-            text = cmn::GetStringRes(IDS_UPDATING);
-        } else {
-            text.Format(L"%s %s",
-                        data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::WEATHER_TEXT),
-                        data_snapshot->GetWeatherItem(cfg.time_slot, WeatherItem::TEMPERATURE));
-        }
+
+        real_width += layout.text_rects[0].left - layout.icon_rect.value().left;
     }
 
-    // draw text
-    if (cfg.main_item_scroll_text) {
-        SetText(text);
-        DrawTextScrolling(borrowed_dc.get(), rc_text, dark_mode);
-    } else {
-        SetText(CString{});
-        auto dt_flag = DT_VCENTER | DT_SINGLELINE;
-        if (text_align_right) {
-            dt_flag |= DT_RIGHT;
-        }
-        borrowed_dc.get().DrawTextW(text, rc_text, dt_flag);
-    }
+    DrawTexts(borrowed_dc.get(), model.text, layout, text_align_right);
 }
 
 int MainItem::OnMouseEvent(MouseEventType type, int x, int y, void* hWnd, int flag) {
-    AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
     if (type == MouseEventType::MT_DBCLICKED) {
         const auto &cfg = DataManager::Instance().GetConfig();

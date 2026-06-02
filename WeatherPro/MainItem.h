@@ -5,6 +5,8 @@
 class MainItem : public IPluginItem
 {
 public:
+    virtual ~MainItem() = default;
+
     const wchar_t* GetItemName() const override;
     const wchar_t* GetItemId() const override;
     const wchar_t* GetItemLableText() const override;
@@ -22,4 +24,6 @@ public:
 private:
     int taskbar_wnd_dpi{ 96 };
     bool text_align_right{ true };
+    bool dual_line_mode{ false };
+    int real_width{ 0 };
 };

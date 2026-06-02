@@ -8,6 +8,7 @@ class PinnedItem : public IPluginItem
 {
 public:
     PinnedItem(WeatherTimeSlot wts, WeatherItem wi);
+    virtual ~PinnedItem() = default;
 
     const wchar_t* GetItemName() const override;
     const wchar_t* GetItemId() const override;
