@@ -35,6 +35,7 @@ MainSettingsDlg::MainSettingsDlg(CWnd* pParent /*=nullptr*/)
 	, bool_draw_alerts_notification_dot(FALSE)
 	, bool_main_item_scroll_text(FALSE)
 	, bool_show_geo_coords_in_summary(FALSE)
+	, bool_enable_dual_line_mode(FALSE)
 {
 
 }
@@ -57,6 +58,7 @@ void MainSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_DRAW_ALERTS_NOTIFICATION_DOT, bool_draw_alerts_notification_dot);
 	DDX_Check(pDX, IDC_CHECK_MAIN_ITEM_SCROLL_TEXT, bool_main_item_scroll_text);
 	DDX_Check(pDX, IDC_CHECK_SHOW_GEO_COORDS_IN_SUMMARY, bool_show_geo_coords_in_summary);
+	DDX_Check(pDX, IDC_CHECK_DUAL_LINE_MODE, bool_enable_dual_line_mode);
 }
 
 
@@ -109,6 +111,7 @@ BOOL MainSettingsDlg::OnInitDialog()
 	bool_draw_alerts_notification_dot = cfg.draw_alerts_notification_dot ? TRUE : FALSE;
 	bool_main_item_scroll_text = cfg.main_item_scroll_text ? TRUE : FALSE;
 	bool_show_geo_coords_in_summary = cfg.format_geo_coords_in_summary ? TRUE : FALSE;
+	bool_enable_dual_line_mode = cfg.enable_dual_line_mode ? TRUE : FALSE;
 
 	// initialze radio button
 	int_ldc_action = cfg.double_click_action == DataManager::LDoubleClickAction::OpenSettingWindow ? 0 : 1;
@@ -145,6 +148,7 @@ DataManager::Config MainSettingsDlg::GetConfigsFromUI() {
 	cfg.draw_alerts_notification_dot = bool_draw_alerts_notification_dot == TRUE;
 	cfg.main_item_scroll_text = bool_main_item_scroll_text == TRUE;
 	cfg.format_geo_coords_in_summary = bool_show_geo_coords_in_summary == TRUE;
+	cfg.enable_dual_line_mode = bool_enable_dual_line_mode == TRUE;
 	cfg.auto_locating_src = old_cfg.auto_locating_src;
 	cfg.pinned_item_data_keys = old_cfg.pinned_item_data_keys;
 

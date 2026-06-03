@@ -33,6 +33,7 @@ protected:
 	BOOL bool_draw_alerts_notification_dot;
 	BOOL bool_main_item_scroll_text;
 	BOOL bool_show_geo_coords_in_summary;
+	BOOL bool_enable_dual_line_mode;
 	int int_ldc_action;
 
 	Location current_location;
@@ -40,9 +41,9 @@ protected:
 
 	DataManager::Config GetConfigsFromUI();
 
+	virtual void OnOK();
 public:
 	virtual BOOL OnInitDialog();
-	virtual void OnOK();
 	afx_msg void OnBnClickedButtonSetLocation();
 	afx_msg void OnBnClickedButtonOpenApiSettings();
 	afx_msg void OnBnClickedButtonCheckErrorMsg();

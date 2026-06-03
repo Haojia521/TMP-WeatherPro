@@ -515,17 +515,13 @@ void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
 
     const auto pixel_size_32 = CalcPixelSize(taskbar_wnd_dpi, 32);
 
-    // 这里以后可以替换为 cfg.dual_line_mode && h >= pixel_size_32
-    // todo: check configs that dual-line-mode is enabled
-    const bool should_use_dual_line = h >= pixel_size_32;
-
-    dual_line_mode = should_use_dual_line;
+    dual_line_mode = cfg.enable_dual_line_mode && h >= pixel_size_32;
 
     const auto *snapshot_ptr = data_snapshot.get();
-    auto model = BuildRenderModel(is_updating, should_use_dual_line, snapshot_ptr, api, cfg);
+    auto model = BuildRenderModel(is_updating, dual_line_mode, snapshot_ptr, api, cfg);
 
     const bool has_icon = model.icon.kind != IconKind::None;
-    auto layout = BuildLayout(x, y, w, h, should_use_dual_line, has_icon, taskbar_wnd_dpi);
+    auto layout = BuildLayout(x, y, w, h, dual_line_mode, has_icon, taskbar_wnd_dpi);
 
     real_width = std::max(borrowed_dc.get().GetTextExtent(model.text.line1).cx,
                           borrowed_dc.get().GetTextExtent(model.text.line2).cx);
