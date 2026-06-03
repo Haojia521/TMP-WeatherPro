@@ -403,7 +403,7 @@ WeatherPro& WeatherPro::Instance() {
 IPluginItem* WeatherPro::GetItem(int index) {
     if (index == 0) {
         return &main_item;
-    } else if (index > 0 && index <= pinned_items.size()) {
+    } else if (index > 0 && index <= static_cast<int>(pinned_items.size())) {
         return &pinned_items[static_cast<size_t>(index - 1)];
     }
     

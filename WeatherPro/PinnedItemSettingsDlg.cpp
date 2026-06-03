@@ -128,7 +128,7 @@ void PinnedItemSettingsDlg::OnOK()
 void PinnedItemSettingsDlg::OnBnClickedButtonAddKey()
 {
 	const auto selected_item_idx = ctrl_combo_weather_item.GetCurSel();
-	if (selected_item_idx < 0 || selected_item_idx >= array_weather_item.size()) {
+	if (selected_item_idx < 0 || selected_item_idx >= static_cast<int>(array_weather_item.size())) {
 		return;
 	}
 
@@ -148,8 +148,9 @@ void PinnedItemSettingsDlg::OnBnClickedButtonAddKey()
 
 void PinnedItemSettingsDlg::OnBnClickedButtonRemoveKey()
 {
-	auto idx = ctrl_list_current_keys.GetNextItem(-1, LVNI_SELECTED);
-	if (idx >= 0 && idx < current_keys.size()) {
+	
+	if (auto idx = ctrl_list_current_keys.GetNextItem(-1, LVNI_SELECTED);
+		idx >= 0 && idx < static_cast<int>(current_keys.size())) {
 		current_keys.erase(current_keys.begin() + idx);
 		ctrl_list_current_keys.DeleteItem(idx);
 	}
