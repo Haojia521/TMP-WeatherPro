@@ -6,20 +6,16 @@
 #define IDC_COMBO_DATA_SOURCE           1000
 #define IDC_STATIC_CURRENT_LOCATION     1001
 #define IDS_API_WCC                     1001
-#define IDB_PNG_ICONS_WCC               1002
 #define IDC_COMBO_WEATHER_TYPE          1002
 #define IDS_API_QW                      1002
 #define IDC_COMBO_UPDATE_INTERVAL       1003
 #define IDS_API_OW                      1003
 #define IDC_BUTTON_OPEN_API_SETTINGS    1004
 #define IDS_WEATHER_REALTIME            1004
-#define IDB_PNG_QW_FILL                 1005
 #define IDC_BUTTON_SET_LOCATION         1005
 #define IDS_WEATHER_IN_24HS             1005
-#define IDB_PNG_QW_HOLLOW               1006
 #define IDC_CHECK_SHOW_INFO_IN_TOOLTIP  1006
 #define IDS_WEATHER_IN_24_48HS          1006
-#define IDB_PNG_OW                      1007
 #define IDC_CHECK_DRAW_ICON             1007
 #define IDS_WEATHER_IN_48_72HS          1007
 #define IDD_DLG_SETTINGS                1008
@@ -34,7 +30,6 @@
 #define IDC_RADIO_QUERY_BY_COORD        1011
 #define IDS_UPDATE_INTERVAL_120MIN      1012
 #define IDC_EDIT_QUERY_TEXT             1012
-#define IDB_PNG_LOADING                 1012
 #define IDC_EDIT_QUERY_LON              1013
 #define IDS_TMP_INVALID_LON_VALUE       1013
 #define IDD_DLG_OPTIONS_WCC             1013
@@ -79,17 +74,21 @@
 #define IDC_STATIC_JWT_PRV_KEY_FILEPATH 1029
 #define IDS_UNITS_STANDARD              1029
 #define IDB_PNG1                        1029
-#define IDB_PNG_LOADING_SIZE32          1029
 #define IDC_BUTTON_CREATE_KEY_PAIR      1030
 #define IDS_UNITS_METRIC                1030
+#define IDB_PNG_MS_QW_FILL              1030
 #define IDC_BUTTON_SELECT_KEY_PAIR      1031
 #define IDS_UNITS_IMPERIAL              1031
+#define IDB_PNG_MS_QW_HOLLOW            1031
 #define IDC_BUTTON_COPY_PUB_KEY         1032
 #define IDS_WND_TITLE_LOGGER_MSG        1032
+#define IDB_PNG_MS_LOADING              1032
 #define IDC_CHECK_SHOW_TEMP_FEELS_LIKE  1033
 #define IDS_WND_TITLE_ALERT_MSG         1033
+#define IDB_PNG_MS_OW                   1033
 #define IDC_CHECK_SHOW_HUM              1034
 #define IDS_TS_TODAY                    1034
+#define IDB_PNG_MS_WCC                  1034
 #define IDC_CHECK_SHOW_WIND             1035
 #define IDS_TS_TOMORROW                 1035
 #define IDC_CHECK_USE_WIND_SCALE        1036
@@ -146,7 +145,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        1030
+#define _APS_NEXT_RESOURCE_VALUE        1035
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1072
 #define _APS_NEXT_SYMED_VALUE           1000

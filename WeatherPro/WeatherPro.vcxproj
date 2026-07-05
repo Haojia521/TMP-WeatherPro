@@ -269,16 +269,13 @@
     <ResourceCompile Include="WeatherPro.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\icons-qw-fill-32x32.png" />
-    <Image Include="res\icons-qw-hollow-32x32.png" />
-    <Image Include="res\icons-wcc-32x32.png" />
-    <Image Include="res\loading-frames-16.png" />
-    <Image Include="res\loading-frames-32.png" />
-    <Image Include="res\ow-32.png" />
+    <Image Include="res\loading-ms.png" />
+    <Image Include="res\ow-ms.png" />
     <Image Include="res\QR_AliPay.bmp" />
     <Image Include="res\QR_WeChat.bmp" />
-    <Image Include="res\qw-fill-32.png" />
-    <Image Include="res\qw-hollow-32.png" />
+    <Image Include="res\qw-fill-ms.png" />
+    <Image Include="res\qw-hollow-ms.png" />
+    <Image Include="res\wcc-ms.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

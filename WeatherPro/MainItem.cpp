@@ -329,7 +329,7 @@ namespace
                     return;
                 }
 
-                icon_res->Draw(&dc, rc_icon, loading_frame_idx);
+                icon_res->Draw(dc, rc_icon, loading_frame_idx);
                 loading_frame_idx = (loading_frame_idx + 1) % icon_res->GetMaxCount();
                 return;
             }
@@ -340,7 +340,7 @@ namespace
                     return;
                 }
 
-                icon_res->Draw(&dc, rc_icon, icon.weather_icon_index);
+                icon_res->Draw(dc, rc_icon, icon.weather_icon_index);
                 return;
             }
         }

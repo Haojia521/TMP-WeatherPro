@@ -176,34 +176,25 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\icons-wcc-32x32.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="res\icons-qw-fill-32x32.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="res\icons-qw-hollow-32x32.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="res\qw-fill-32.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="res\qw-hollow-32.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="res\ow-32.png">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="res\loading-frames-16.png">
-      <Filter>资源文件</Filter>
-    </Image>
     <Image Include="res\QR_AliPay.bmp">
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="res\QR_WeChat.bmp">
       <Filter>资源文件</Filter>
     </Image>
-    <Image Include="res\loading-frames-32.png">
+    <Image Include="res\qw-fill-ms.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\qw-hollow-ms.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\loading-ms.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\ow-ms.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\wcc-ms.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>
