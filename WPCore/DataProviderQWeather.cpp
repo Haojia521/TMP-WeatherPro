@@ -406,7 +406,7 @@ namespace
             auto *j_arr_locations = yyjson_obj_get(j_val, "location");
 
             auto extractLocationInfo = [](yyjson_val *j_val) {
-                return Location{
+                Location loc{
                     .id = jvh::getString(j_val, "id"),
                     .name = jvh::getString(j_val, "name"),
                     .administrative_ownership =
@@ -414,6 +414,23 @@ namespace
                     .longitude = jvh::getString(j_val, "lon"),
                     .latitude = jvh::getString(j_val, "lat"),
                 };
+
+                std::string short_lon, short_lat;
+
+                try {
+                    short_lon = std::format("{:.2f}", std::stod(loc.longitude));
+                    short_lat = std::format("{:.2f}", std::stod(loc.latitude));
+                } catch (...) {
+                    short_lon.clear();
+                    short_lat.clear();
+                }
+
+                if (!short_lon.empty() && !short_lat.empty()) {
+                    loc.longitude = short_lon;
+                    loc.latitude = short_lat;
+                }
+
+                return loc;
             };
 
             size_t idx, max;

@@ -5,6 +5,9 @@
 #include "WeatherPro.h"
 #include "afxdialogex.h"
 #include "SetLocationDlg.h"
+
+#include <format>
+
 #include "resource.h"
 
 #include "Common.h"
@@ -84,8 +87,9 @@ BOOL SetLocationDlg::OnInitDialog()
 	{
 		auto span = list_ctrl_rc.Width() / 5;
 		ctrl_list_locations.InsertColumn(0, cmn::GetStringRes(IDS_LOCATION_NAME), LVCFMT_LEFT, span);
-		ctrl_list_locations.InsertColumn(1, cmn::GetStringRes(IDS_LOCATION_AO), LVCFMT_LEFT, span * 2);
-		ctrl_list_locations.InsertColumn(2, cmn::GetStringRes(IDS_LOCATION_ID), LVCFMT_LEFT, span * 2);
+		ctrl_list_locations.InsertColumn(1, cmn::GetStringRes(IDS_LOCATION_AO), LVCFMT_LEFT, static_cast<int>(span * 1.75));
+		ctrl_list_locations.InsertColumn(2, cmn::GetStringRes(IDS_LOCATION_ID), LVCFMT_LEFT, span);
+		ctrl_list_locations.InsertColumn(3, cmn::GetStringRes(IDS_LOCATION_LON_LAT), LVCFMT_LEFT, static_cast<int>(span * 1.25));
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -154,6 +158,9 @@ void SetLocationDlg::OnBnClickedButtonDoQuery()
 			ctrl_list_locations.InsertItem(idx, cmn::MultiByte2WideChar(loc.name).c_str());
 			ctrl_list_locations.SetItemText(idx, 1, cmn::MultiByte2WideChar(loc.administrative_ownership).c_str());
 			ctrl_list_locations.SetItemText(idx, 2, cmn::MultiByte2WideChar(loc.id).c_str());
+
+			auto lon_lat = std::format(L"{}/{}", cmn::MultiByte2WideChar(loc.longitude), cmn::MultiByte2WideChar(loc.latitude));
+			ctrl_list_locations.SetItemText(idx, 3, lon_lat.c_str());
 
 			++idx;
 		}

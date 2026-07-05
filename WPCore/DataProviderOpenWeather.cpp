@@ -419,8 +419,8 @@ namespace
             loc.name = jvh::getString(j_loc, "name");
         }
 
-        loc.latitude = std::format("{:.4f}", yyjson_get_real(yyjson_obj_get(j_loc, "lat")));
-        loc.longitude = std::format("{:.4f}", yyjson_get_real(yyjson_obj_get(j_loc, "lon")));
+        loc.latitude = std::format("{:.2f}", yyjson_get_real(yyjson_obj_get(j_loc, "lat")));
+        loc.longitude = std::format("{:.2f}", yyjson_get_real(yyjson_obj_get(j_loc, "lon")));
 
         auto country = jvh::getString(j_loc, "country");
         if (auto state = jvh::getString(j_loc, "state"); 
