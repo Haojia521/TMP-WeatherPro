@@ -23,15 +23,17 @@ public:
 using IconSheetPtr = std::shared_ptr<IconSheet>;
 using IconSheetCPtr = std::shared_ptr<const IconSheet>;
 
-class IconSheetManager
+class IconManager
 {
 public:
-    static IconSheetManager& Instance();
+    static IconManager& Instance();
 
     const IconSheet* GetIconSheet(IconResType type);
+    HICON GetIcon(UINT icon_id);
 
     void LoadIconResources();
 
 private:
-    std::unordered_map<IconResType, IconSheetPtr> icon_resources_;
+    std::unordered_map<IconResType, IconSheetPtr> icon_sheets_;
+    std::unordered_map<UINT, HICON> icons_;
 };

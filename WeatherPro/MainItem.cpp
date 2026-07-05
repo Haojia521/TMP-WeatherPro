@@ -324,7 +324,7 @@ namespace
                 return;
 
             case IconKind::Loading: {
-                const auto *icon_res = IconSheetManager::Instance().GetIconSheet(IconResType::Loading);
+                const auto *icon_res = IconManager::Instance().GetIconSheet(IconResType::Loading);
                 if (icon_res == nullptr) {
                     return;
                 }
@@ -385,32 +385,26 @@ namespace
     }
 
     // draw a red dot on icon upper-right corner
-    void DrawNotificationDot(CDC &dc, const CRect &icon_rc)
+    void DrawNotificationDot(const CDC &dc, const CRect &icon_rc)
     {
+        const auto icon_notify_dot = IconManager::Instance().GetIcon(IDI_ICON_NOTIFY_DOT);
+        if (icon_notify_dot == nullptr) {
+            return;
+        }
+
         const auto icon_size = std::min(icon_rc.Height(), icon_rc.Width());
         const auto dot_size = icon_size / 3;
 
-        CRect dot_rc{
+        const CRect dot_rc{
             icon_rc.right - dot_size,
             icon_rc.top,
             icon_rc.right,
             icon_rc.top + dot_size,
         };
 
-        // create & select a red brush
-        CBrush red_brush(RGB(238, 64, 76));
-        CBrush* old_brush = dc.SelectObject(&red_brush);
-
-        // create & select a red pen
-        CPen red_pen(PS_SOLID, 1, RGB(238, 64, 76));
-        CPen* old_pen = dc.SelectObject(&red_pen);
-
-        // draw the dot
-        dc.Ellipse(dot_rc);
-
-        // restore the objects
-        dc.SelectObject(old_brush);
-        dc.SelectObject(old_pen);
+        ::DrawIconEx(dc.GetSafeHdc(),
+                     dot_rc.left, dot_rc.top, icon_notify_dot,
+                     dot_rc.Width(), dot_rc.Height(), 0, nullptr, DI_NORMAL);
     }
 
     class CBorrowedCDC

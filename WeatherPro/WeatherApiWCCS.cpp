@@ -30,7 +30,7 @@ namespace
 }
 
 const IconSheet* WapiWCCS::GetWeatherIcons() const {
-    return IconSheetManager::Instance().GetIconSheet(IconResType::WccBlue);
+    return IconManager::Instance().GetIconSheet(IconResType::WccBlue);
 }
 
 int WapiWCCS::GetWeatherIconIndex(std::wstring_view weather_code) const {

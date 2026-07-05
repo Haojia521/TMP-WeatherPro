@@ -270,6 +270,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\loading-ms.png" />
+    <Image Include="res\notify-dot.ico" />
     <Image Include="res\ow-ms.png" />
     <Image Include="res\QR_AliPay.bmp" />
     <Image Include="res\QR_WeChat.bmp" />

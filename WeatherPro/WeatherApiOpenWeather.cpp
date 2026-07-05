@@ -41,7 +41,7 @@ namespace
 }
 
 const IconSheet* WapiOpenWeather::GetWeatherIcons() const {
-    return IconSheetManager::Instance().GetIconSheet(IconResType::OpenWeather);
+    return IconManager::Instance().GetIconSheet(IconResType::OpenWeather);
 }
 
 int WapiOpenWeather::GetWeatherIconIndex(std::wstring_view weather_code) const {

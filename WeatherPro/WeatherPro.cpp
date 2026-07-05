@@ -394,7 +394,7 @@ void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
 
     if (index == ExtendedInfoIndex::EI_CONFIG_DIR) {
         SetLanguageIdLegacy(data);
-        IconSheetManager::Instance().LoadIconResources();
+        IconManager::Instance().LoadIconResources();
         DataManager::Instance().LoadConfigs(data);
         InitPinnedItems();
 

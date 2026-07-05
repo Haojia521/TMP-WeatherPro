@@ -197,5 +197,8 @@
     <Image Include="res\wcc-ms.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\notify-dot.ico">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

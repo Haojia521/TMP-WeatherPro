@@ -228,21 +228,35 @@ namespace
 /**********************************************************************************************************************/
 // IconSheetManager
 
-IconSheetManager& IconSheetManager::Instance() {
-    static IconSheetManager instance;
+IconManager& IconManager::Instance() {
+    static IconManager instance;
 
     return instance;
 }
 
-const IconSheet* IconSheetManager::GetIconSheet(IconResType type) {
-    if (icon_resources_.contains(type)) {
-        return icon_resources_[type].get();
+const IconSheet* IconManager::GetIconSheet(IconResType type) {
+    if (icon_sheets_.contains(type)) {
+        return icon_sheets_[type].get();
     } else {
         return nullptr;
     }
 }
 
-void IconSheetManager::LoadIconResources() {
+HICON IconManager::GetIcon(UINT icon_id) {
+    if (!icons_.contains(icon_id)) {
+        AFX_MANAGE_STATE(AfxGetStaticModuleState())
+
+        const auto hicon = static_cast<HICON>(
+            LoadImageW(AfxGetInstanceHandle(), MAKEINTRESOURCE(icon_id), IMAGE_ICON,
+                       16, 16, 0));
+
+        icons_[icon_id] = hicon;
+    }
+
+    return icons_[icon_id];
+}
+
+void IconManager::LoadIconResources() {
     AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
     // start gdi+ temporarily
@@ -293,8 +307,8 @@ void IconSheetManager::LoadIconResources() {
         const auto icons = std::make_shared<CompositedIconSheet>();
         icons->Load(IDB_PNG_MS_WCC, 8, 7, 4,
                     SubShteetMetaList{ SSM_C8R7M4.begin(), SSM_C8R7M4.end() });
-        icon_resources_[IconResType::WccBlue] = icons;
-        icon_resources_[IconResType::WccWhite] = icons;
+        icon_sheets_[IconResType::WccBlue] = icons;
+        icon_sheets_[IconResType::WccWhite] = icons;
     }
 
     // weather icons: qweather fill & hollow
@@ -302,12 +316,12 @@ void IconSheetManager::LoadIconResources() {
         const auto icons_fill = std::make_shared<CompositedIconSheet>();
         icons_fill->Load(IDB_PNG_MS_QW_FILL, 8, 8, 4,
                          SubShteetMetaList{ SSM_C8R8M4.begin(), SSM_C8R8M4.end() });
-        icon_resources_[IconResType::QWeatherFill] = icons_fill;
+        icon_sheets_[IconResType::QWeatherFill] = icons_fill;
 
         const auto icons_hollow = std::make_shared<CompositedIconSheet>();
         icons_hollow->Load(IDB_PNG_MS_QW_HOLLOW, 8, 8, 4,
                            SubShteetMetaList{ SSM_C8R8M4.begin(), SSM_C8R8M4.end() });
-        icon_resources_[IconResType::QWeatherHollow] = icons_hollow;
+        icon_sheets_[IconResType::QWeatherHollow] = icons_hollow;
     }
 
     // weather icons: open weather
@@ -315,7 +329,7 @@ void IconSheetManager::LoadIconResources() {
         const auto icons = std::make_shared<CompositedIconSheet>();
         icons->Load(IDB_PNG_MS_OW, 8, 2, 4,
                     SubShteetMetaList{ SSM_C8R2M4.begin(), SSM_C8R2M4.end() });
-        icon_resources_[IconResType::OpenWeather] = icons;
+        icon_sheets_[IconResType::OpenWeather] = icons;
     }
 
     // loading frame icons
@@ -323,7 +337,7 @@ void IconSheetManager::LoadIconResources() {
         const auto icons_loading = std::make_shared<CompositedIconSheet>();
         icons_loading->Load(IDB_PNG_MS_LOADING, 8, 2, 4,
                             SubShteetMetaList{ SSM_C8R2M4.begin(), SSM_C8R2M4.end() });
-        icon_resources_[IconResType::Loading] = icons_loading;
+        icon_sheets_[IconResType::Loading] = icons_loading;
     }
 
     // shutdown gdi+

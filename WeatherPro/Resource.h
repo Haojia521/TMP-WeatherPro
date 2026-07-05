@@ -91,6 +91,7 @@
 #define IDB_PNG_MS_WCC                  1034
 #define IDC_CHECK_SHOW_WIND             1035
 #define IDS_TS_TOMORROW                 1035
+#define IDI_ICON_NOTIFY_DOT             1035
 #define IDC_CHECK_USE_WIND_SCALE        1036
 #define IDS_TS_DAY_AFT_TOM              1036
 #define IDC_CHECK_SHOW_PM2P5            1037
@@ -123,6 +124,7 @@
 #define IDC_CHECK_LOC_SRC_OS            1051
 #define IDS_NEW_VERSION_DESCRIPTION     1051
 #define IDC_CHECK_LOC_SRC_IP_GEO        1052
+#define IDS_LOCATION_LON_LAT            1052
 #define IDC_CHECK_LOC_SRC_IP_RGN_NAME   1053
 #define IDC_CHECK_DRAW_ALERTS_NOTIFICATION_DOT 1054
 #define IDC_BUTTON_DONATE               1056
@@ -145,7 +147,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        1035
+#define _APS_NEXT_RESOURCE_VALUE        1036
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1072
 #define _APS_NEXT_SYMED_VALUE           1000

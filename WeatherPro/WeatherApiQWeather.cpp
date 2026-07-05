@@ -59,7 +59,7 @@ namespace
 const IconSheet* WapiQWeather::GetWeatherIcons() const {
     const auto icon_res_type = config.icon_style == IconStyle::Hollow ?
         IconResType::QWeatherHollow : IconResType::QWeatherFill;
-    return IconSheetManager::Instance().GetIconSheet(icon_res_type);
+    return IconManager::Instance().GetIconSheet(icon_res_type);
 }
 
 int WapiQWeather::GetWeatherIconIndex(std::wstring_view weather_code) const {
