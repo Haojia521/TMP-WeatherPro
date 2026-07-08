@@ -84,6 +84,9 @@
     <ClCompile Include="PinnedItemSettingsDlg.cpp">
       <Filter>DLG</Filter>
     </ClCompile>
+    <ClCompile Include="ModalProgressDlg.cpp">
+      <Filter>DLG</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="WeatherPro.def">
@@ -167,6 +170,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PinnedItemSettingsDlg.h">
+      <Filter>DLG</Filter>
+    </ClInclude>
+    <ClInclude Include="ModalProgressDlg.h">
       <Filter>DLG</Filter>
     </ClInclude>
   </ItemGroup>

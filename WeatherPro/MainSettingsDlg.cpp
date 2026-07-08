@@ -124,8 +124,8 @@ BOOL MainSettingsDlg::OnInitDialog()
 	UpdateData(FALSE);
 
 	// new version
-	if (!WeatherPro::Instance().HasNewVersionWpPackage()) {
-		GetDlgItem(IDC_BUTTON_VERSION)->ShowWindow(SW_HIDE);
+	if (WeatherPro::Instance().HasNewVersionWpPackage()) {
+		GetDlgItem(IDC_BUTTON_VERSION)->SetWindowTextW(cmn::GetStringRes(IDS_NEW_VERSION_RELEASED));
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
@@ -295,20 +295,38 @@ void MainSettingsDlg::OnBnClickedButtonVersion()
 {
 	const auto &wp_app = WeatherPro::Instance();
 
+	if (!wp_app.HasNewVersionWpPackage()) {
+	    // check new version
+		ModalTaskProgressDlg progress_dlg(this, []() {
+			WeatherPro::Instance().CheckNewVersion();
+		});
+		progress_dlg.title = cmn::GetStringRes(IDS_CHECK_NEW_VERSION);
+		progress_dlg.DoModal();
+	}
+
 	if (wp_app.HasNewVersionWpPackage()) {
 		const auto &latest_pkg = wp_app.GetWpLatestPackage();
 
-		const auto &msg_template = cmn::GetStringRes(IDS_NEW_VERSION_DESCRIPTION);
 #ifdef WPX86
 		auto target_url{ latest_pkg.url_x86 };
 #else
 		auto target_url{ latest_pkg.url_x64 };
 #endif // WPX86
 
-		CString msg;
+		const auto &msg_template = cmn::GetStringRes(IDS_NEW_VERSION_DESCRIPTION);
+		
+	    CString msg;
 		msg.Format(msg_template, latest_pkg.version.to_wstring().c_str(), target_url.c_str());
 		if (MessageBoxW(msg, cmn::GetStringRes(IDS_NEW_VERSION_RELEASED), MB_OKCANCEL) == IDOK) {
 			ShellExecuteW(NULL, _T("open"), target_url.c_str(), NULL, NULL, SW_SHOW);
 		}
+	}
+    else {
+		const auto &msg_template = cmn::GetStringRes(IDS_WP_ALREADY_LATEST);
+		const auto &current_version = WeatherPro::Instance().GetWpVersion();
+
+		CString msg;
+		msg.Format(msg_template, current_version.to_wstring().c_str());
+		MessageBoxW(msg, cmn::GetStringRes(IDS_CHECK_NEW_VERSION), MB_OK);
 	}
 }

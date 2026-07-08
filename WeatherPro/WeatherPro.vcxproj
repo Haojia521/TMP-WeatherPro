@@ -216,6 +216,7 @@
     <ClCompile Include="IconResources.cpp" />
     <ClCompile Include="MainItem.cpp" />
     <ClCompile Include="MainSettingsDlg.cpp" />
+    <ClCompile Include="ModalProgressDlg.cpp" />
     <ClCompile Include="OptionsOwDlg.cpp" />
     <ClCompile Include="OptionsQwDlg.cpp" />
     <ClCompile Include="OptionsWccDlg.cpp" />
@@ -245,6 +246,7 @@
     <ClInclude Include="DataManager.h" />
     <ClInclude Include="EditCtrlFloatNumber.h" />
     <ClInclude Include="MainSettingsDlg.h" />
+    <ClInclude Include="ModalProgressDlg.h" />
     <ClInclude Include="OptionsOwDlg.h" />
     <ClInclude Include="OptionsQwDlg.h" />
     <ClInclude Include="OptionsWccDlg.h" />

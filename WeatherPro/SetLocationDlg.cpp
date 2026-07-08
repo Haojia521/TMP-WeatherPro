@@ -5,13 +5,14 @@
 #include "WeatherPro.h"
 #include "afxdialogex.h"
 #include "SetLocationDlg.h"
-
-#include <format>
-
+#include "ModalProgressDlg.h"
 #include "resource.h"
 
 #include "Common.h"
 #include "DataManager.h"
+
+
+#include <format>
 
 // SetLocationDlg 对话框
 
@@ -106,67 +107,73 @@ void SetLocationDlg::OnBnClickedButtonDoQuery()
 {
 	UpdateData(TRUE);
 
-	// clear last queries
-	ctrl_list_locations.DeleteAllItems();
-	locations.clear();
+	auto task_worker = [this] {
+		// clear last queries
+		ctrl_list_locations.DeleteAllItems();
+		locations.clear();
 
-	const auto &api = DataManager::Instance().GetApiCollections().GetApi(api_type);
+		const auto &api = DataManager::Instance().GetApiCollections().GetApi(api_type);
 
-	if (int_query_type == 0) {
-		// query by text
-		api.GetProvider().geocodingDirect(cmn::WideChar2MultiByte(str_query_text), locations);
-	} else {
-		// query by geo-coordinates
-		
-		auto string_to_float = [](const std::wstring& str, float &val) -> bool {
-			try {
-				val = std::stof(str);
-				return true;
+		if (int_query_type == 0) {
+			// query by text
+			api.GetProvider().geocodingDirect(cmn::WideChar2MultiByte(str_query_text), locations);
+		} else {
+			// query by geo-coordinates
+
+			auto string_to_float = [](const std::wstring& str, float &val) -> bool {
+				try {
+					val = std::stof(str);
+					return true;
+				}
+				catch (const std::exception &) {
+					val = 0.f;
+					return false;
+				}
+			};
+
+			// check longitude and latitude values
+			if (auto lon{ 0.f }; !string_to_float(str_query_lon.GetString(), lon) ||
+				lon < -180.f || lon > 180.f) {
+				CString msg;
+				msg.Format(cmn::GetStringRes(IDS_TMP_INVALID_LON_VALUE), str_query_lon.GetString());
+
+				MessageBox(msg, L"Alert");
+				return;
 			}
-			catch (const std::exception &) {
-				val = 0.f;
-				return false;
+			if (auto lat{ 0.f }; !string_to_float(str_query_lat.GetString(), lat) ||
+				lat < -90.f || lat > 90.f) {
+				CString msg;
+				msg.Format(cmn::GetStringRes(IDS_TMP_INVALID_LAT_VALUE), str_query_lat.GetString());
+
+				MessageBox(msg, L"Alert");
+				return;
 			}
-		};
 
-		// check longitude and latitude values
-		if (auto lon{ 0.f }; !string_to_float(str_query_lon.GetString(), lon) ||
-			lon < -180.f || lon > 180.f) {
-			CString msg;
-			msg.Format(cmn::GetStringRes(IDS_TMP_INVALID_LON_VALUE), str_query_lon);
-
-			MessageBox(msg, L"Alert");
-			return;
-		}
-		if (auto lat{ 0.f }; !string_to_float(str_query_lat.GetString(), lat) ||
-			lat < -90.f || lat > 90.f) {
-			CString msg;
-			msg.Format(cmn::GetStringRes(IDS_TMP_INVALID_LAT_VALUE), str_query_lat);
-
-			MessageBox(msg, L"Alert");
-			return;
+			api.GetProvider().geocodingReverse(cmn::WideChar2MultiByte(str_query_lat),
+											   cmn::WideChar2MultiByte(str_query_lon),
+											   locations);
 		}
 
-		api.GetProvider().geocodingReverse(cmn::WideChar2MultiByte(str_query_lat),
-										   cmn::WideChar2MultiByte(str_query_lon),
-										   locations);
-	}
+		if (!locations.empty()) {
+			auto idx{ 0 };
+			for (const auto &loc : locations) {
+				ctrl_list_locations.InsertItem(idx, cmn::MultiByte2WideChar(loc.name).c_str());
+				ctrl_list_locations.SetItemText(idx, 1, cmn::MultiByte2WideChar(loc.administrative_ownership).c_str());
+				ctrl_list_locations.SetItemText(idx, 2, cmn::MultiByte2WideChar(loc.id).c_str());
 
-	if (!locations.empty()) {
-		auto idx{ 0 };
-		for (const auto &loc : locations) {
-			ctrl_list_locations.InsertItem(idx, cmn::MultiByte2WideChar(loc.name).c_str());
-			ctrl_list_locations.SetItemText(idx, 1, cmn::MultiByte2WideChar(loc.administrative_ownership).c_str());
-			ctrl_list_locations.SetItemText(idx, 2, cmn::MultiByte2WideChar(loc.id).c_str());
+				auto lon_lat = std::format(L"{}/{}", cmn::MultiByte2WideChar(loc.longitude), cmn::MultiByte2WideChar(loc.latitude));
+				ctrl_list_locations.SetItemText(idx, 3, lon_lat.c_str());
 
-			auto lon_lat = std::format(L"{}/{}", cmn::MultiByte2WideChar(loc.longitude), cmn::MultiByte2WideChar(loc.latitude));
-			ctrl_list_locations.SetItemText(idx, 3, lon_lat.c_str());
+				++idx;
+			}
 
-			++idx;
+			ctrl_list_locations.SetSelectionMark(0);
 		}
+	};
 
-		ctrl_list_locations.SetSelectionMark(0);
-	}
+	ModalTaskProgressDlg progress_dlg(this, task_worker);
+	progress_dlg.title = cmn::GetStringRes(IDS_QUERY_LOCATION);
+	progress_dlg.DoModal();
 }
 
 void SetLocationDlg::OnOK()

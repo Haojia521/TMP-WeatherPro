@@ -384,12 +384,21 @@ void WeatherPro::OnInitialize(ITrafficMonitor *pApp) {
 
 void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
     if (index == ExtendedInfoIndex::EI_TASKBAR_WND_VALUE_RIGHT_ALIGN) {
-        try {
-            main_item.SetTextAlignRight(std::stoi(data) > 0);
-        }
-        catch (...) {
-            // do nothing
-        }
+        const auto is_align_right = [](const wchar_t *s) {
+            // early return for null pointer and empty string
+            if (!s || !*s) {
+                return false;
+            }
+
+            try {
+                return std::stoi(std::wstring{ s }) > 0;
+            }
+            catch (...) {
+                return false;
+            }
+        }(data);
+
+        main_item.SetTextAlignRight(is_align_right);
     }
 
     if (index == ExtendedInfoIndex::EI_CONFIG_DIR) {
@@ -407,7 +416,7 @@ const WpVersion& WeatherPro::GetWpVersion() const {
     return current_version;
 }
 
-const WpLatestPackage WeatherPro::GetWpLatestPackage() const {
+const WpLatestPackage& WeatherPro::GetWpLatestPackage() const {
     return latest_package;
 }
 
@@ -415,8 +424,12 @@ bool WeatherPro::HasNewVersionWpPackage() const {
     return latest_package.version > current_version;
 }
 
-void WeatherPro::CheckNewVersion(std::time_t ts) {
-    if (ts > (last_new_version_checking_timestamp + NEW_VERSION_CHECKING_INTERVAL_S)) {
+void WeatherPro::CheckNewVersion() {
+    CheckNewVersion(std::time(nullptr), true);
+}
+
+void WeatherPro::CheckNewVersion(std::time_t ts, bool force) {
+    if (force || ts > (last_new_version_checking_timestamp + NEW_VERSION_CHECKING_INTERVAL_S)) {
         last_new_version_checking_timestamp = ts;
 
         auto worker = [this]() {
@@ -429,7 +442,7 @@ void WeatherPro::CheckNewVersion(std::time_t ts) {
 }
 
 ITMPlugin::OptionReturn WeatherPro::ShowOptionsDialog(void* hParent) {
-    AFX_MANAGE_STATE(AfxGetStaticModuleState());
+    AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
     MainSettingsDlg dlg(CWnd::FromHandle(static_cast<HWND>(hParent)));
     if (dlg.DoModal() == IDOK)

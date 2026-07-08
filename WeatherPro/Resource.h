@@ -94,6 +94,7 @@
 #define IDI_ICON_NOTIFY_DOT             1035
 #define IDC_CHECK_USE_WIND_SCALE        1036
 #define IDS_TS_DAY_AFT_TOM              1036
+#define IDD_DLG_PROGRESS                1036
 #define IDC_CHECK_SHOW_PM2P5            1037
 #define IDS_WI_TEMPERATURE              1037
 #define IDC_CHECK_SHOW_PM10             1038
@@ -126,7 +127,10 @@
 #define IDC_CHECK_LOC_SRC_IP_GEO        1052
 #define IDS_LOCATION_LON_LAT            1052
 #define IDC_CHECK_LOC_SRC_IP_RGN_NAME   1053
+#define IDS_QUERY_LOCATION              1053
 #define IDC_CHECK_DRAW_ALERTS_NOTIFICATION_DOT 1054
+#define IDS_CHECK_NEW_VERSION           1054
+#define IDS_WP_ALREADY_LATEST           1055
 #define IDC_BUTTON_DONATE               1056
 #define IDC_COMBO_TIME_SLOT             1058
 #define IDC_COMBO_WEATHER_ITEM          1059
@@ -142,14 +146,15 @@
 #define IDC_CHECK_SHOW_GEO_COORDS_IN_SUMMARY 1070
 #define IDC_CHECK2                      1071
 #define IDC_CHECK_DUAL_LINE_MODE        1071
+#define IDC_PROGRESS_X                  1072
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        1036
+#define _APS_NEXT_RESOURCE_VALUE        1038
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1072
+#define _APS_NEXT_CONTROL_VALUE         1074
 #define _APS_NEXT_SYMED_VALUE           1000
 #endif
 #endif

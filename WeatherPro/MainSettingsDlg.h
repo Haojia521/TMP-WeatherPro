@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "afxdialogex.h"
+#include "ModalProgressDlg.h"
 #include "DataManager.h"
 
 #include <WPCore/DataDef.h>

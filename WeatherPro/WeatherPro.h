@@ -49,13 +49,14 @@ public:
 	void UpdateWeather(bool force = false);
 
 	const WpVersion& GetWpVersion() const;
-	const WpLatestPackage GetWpLatestPackage() const;
+	const WpLatestPackage& GetWpLatestPackage() const;
 	bool HasNewVersionWpPackage() const;
+	void CheckNewVersion();
 
 private:
 	void InitPinnedItems();
 	void UpdateWeather(std::time_t ts, bool force = false);
-	void CheckNewVersion(std::time_t ts);
+	void CheckNewVersion(std::time_t ts, bool force = false);
 
 	WpLatestPackage latest_package;
 	WpVersion current_version;
