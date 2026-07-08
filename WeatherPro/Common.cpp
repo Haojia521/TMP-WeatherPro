@@ -201,8 +201,8 @@ namespace cmn
             geolocator.DesiredAccuracy(PositionAccuracy::Default);
 
             auto position = geolocator.GetGeopositionAsync(
-                std::chrono::seconds{ 0 },
-                std::chrono::seconds{ 5 }
+                std::chrono::minutes{ 15 },
+                std::chrono::seconds{ 10 }
             ).get();
 
             auto point = position.Coordinate().Point().Position();
