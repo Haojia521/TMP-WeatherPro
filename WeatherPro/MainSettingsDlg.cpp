@@ -27,15 +27,15 @@ IMPLEMENT_DYNAMIC(MainSettingsDlg, CDialogEx)
 
 MainSettingsDlg::MainSettingsDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DLG_SETTINGS, pParent)
+	, bool_auto_locating(FALSE)
 	, bool_show_info_in_tooltip(FALSE)
 	, bool_draw_icon(FALSE)
-	, int_ldc_action(0)
-	, str_current_location(_T(""))
-	, bool_auto_locating(FALSE)
 	, bool_draw_alerts_notification_dot(FALSE)
 	, bool_main_item_scroll_text(FALSE)
 	, bool_show_geo_coords_in_summary(FALSE)
 	, bool_enable_dual_line_mode(FALSE)
+	, int_ldc_action(0)
+	, str_current_location(_T(""))
 {
 
 }
@@ -119,7 +119,7 @@ BOOL MainSettingsDlg::OnInitDialog()
 	// initialize location string
 	const auto &loc = DataManager::Instance().GetCurrentLocation();
 	current_location = loc;
-	str_current_location = cmn::MultiByte2WideChar(loc.getFormattedString().c_str()).c_str();
+	str_current_location = cmn::MultiByte2WideChar(loc.getFormattedString()).c_str();
 
 	UpdateData(FALSE);
 
@@ -196,7 +196,7 @@ void MainSettingsDlg::OnBnClickedButtonSetLocation()
 			current_location = loc;
 
 			// update location string
-			str_current_location = cmn::MultiByte2WideChar(loc.getFormattedString().c_str()).c_str();
+			str_current_location = cmn::MultiByte2WideChar(loc.getFormattedString()).c_str();
 			// disable auto locating
 			bool_auto_locating = FALSE;
 
@@ -262,7 +262,7 @@ void MainSettingsDlg::OnBnClickedButtonUpdateManually()
 
 	// save current configs first to make them taking effect
 	auto &data_mgr = DataManager::Instance();
-	auto cfg{ GetConfigsFromUI() };
+	const auto cfg{ GetConfigsFromUI() };
 
 	data_mgr.SetCurrentLocation(current_location);
 	data_mgr.SetConfig(cfg);
@@ -270,7 +270,22 @@ void MainSettingsDlg::OnBnClickedButtonUpdateManually()
 
 	// update the timestamp and weather data
 	last_update_stamp = now;
-	WeatherPro::Instance().UpdateWeather(true);
+
+	ModalTaskProgressDlg progress_dlg(this, [] {
+		// update weahter in blocking mode
+	    WeatherPro::Instance().UpdateWeather(true, true);
+	});
+	progress_dlg.title = cmn::GetStringRes(IDS_UPDATING);
+	progress_dlg.DoModal();
+
+	// the location may be changed, refresh the location on GUI
+	if (const auto &loc = data_mgr.GetCurrentLocation();
+		loc != current_location) {
+		current_location = loc;
+		str_current_location = cmn::MultiByte2WideChar(loc.getFormattedString()).c_str();
+
+		UpdateData(FALSE);
+	}
 }
 
 void MainSettingsDlg::OnBnClickedButtonAutoLocOptions()

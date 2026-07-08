@@ -396,9 +396,17 @@ ApiCollections& DataManager::GetApiCollections() const {
     return *api_collections_;
 }
 
-void DataManager::UpdateWeather() {
-    std::thread update_thread(&DataManager::ProceedUpdate, this);
-    update_thread.detach();
+DataManager::FutureSignalComplete DataManager::UpdateWeather() {
+    std::promise<void> promise;
+    auto future = promise.get_future();
+
+    std::thread worker([this, promise = std::move(promise)]() mutable {
+        ProceedUpdate();
+        promise.set_value();
+    });
+    worker.detach();
+
+    return future;
 }
 
 bool DataManager::IsUpdating() {

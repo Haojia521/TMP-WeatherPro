@@ -2,6 +2,7 @@
 
 #include "ApiCollections.h"
 
+#include <future>
 #include <unordered_set>
 
 enum class LocationSource : unsigned int
@@ -104,7 +105,9 @@ public:
     void LoadConfigs(std::wstring_view cfg_dir);
     void SaveConfigs() const;
 
-    void UpdateWeather();
+    using FutureSignalComplete = std::future<void>;
+
+    FutureSignalComplete UpdateWeather();
     void RefreshCache() const;
 
     WeatherApi& GetApi() const;

@@ -46,7 +46,7 @@ public:
 	void OnInitialize(ITrafficMonitor *pApp) override;
 	void OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) override;
 
-	void UpdateWeather(bool force = false);
+	void UpdateWeather(bool force = false, bool block_mode = false);
 
 	const WpVersion& GetWpVersion() const;
 	const WpLatestPackage& GetWpLatestPackage() const;
@@ -55,7 +55,7 @@ public:
 
 private:
 	void InitPinnedItems();
-	void UpdateWeather(std::time_t ts, bool force = false);
+	void UpdateWeather(std::time_t ts, bool force = false, bool block_mode = false);
 	void CheckNewVersion(std::time_t ts, bool force = false);
 
 	WpLatestPackage latest_package;

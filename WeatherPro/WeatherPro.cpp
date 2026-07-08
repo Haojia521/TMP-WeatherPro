@@ -451,11 +451,11 @@ ITMPlugin::OptionReturn WeatherPro::ShowOptionsDialog(void* hParent) {
         return ITMPlugin::OR_OPTION_UNCHANGED;
 }
 
-void WeatherPro::UpdateWeather(bool force /*= false*/) {
-    UpdateWeather(std::time(nullptr), force);
+void WeatherPro::UpdateWeather(bool force /*= false*/, bool block_mode/* = false*/) {
+    UpdateWeather(std::time(nullptr), force, block_mode);
 }
 
-void WeatherPro::UpdateWeather(std::time_t ts, bool force /*= false*/) {
+void WeatherPro::UpdateWeather(std::time_t ts, bool force /*= false*/, bool block_mode/* = false*/) {
     if (force || ts > (last_update_timestamp + next_update_span_seconds)) {
         auto &data_mgr = DataManager::Instance();
 
@@ -463,7 +463,11 @@ void WeatherPro::UpdateWeather(std::time_t ts, bool force /*= false*/) {
         next_update_span_seconds =
             CalcUpdateIntervalSeconds(ts, data_mgr.GetConfig().update_interval);
 
-        data_mgr.UpdateWeather();
+        const auto future_signal = data_mgr.UpdateWeather();
+
+        if (block_mode) {
+            future_signal.wait();
+        }
     }
 }
 
