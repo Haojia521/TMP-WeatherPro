@@ -8,7 +8,7 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
 
 ## 功能特性
 
-- 支持多种天气接口
+- 支持多种天气接口 （配置方法请参考[接口说明](docs/DataSourceGuide.md)）
   - 天气网 (weather.com.cn)
   - 和风天气 (qweather.com)
   - OpenWeather (openweathermap.org)
