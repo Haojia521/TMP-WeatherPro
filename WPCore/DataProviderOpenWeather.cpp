@@ -288,67 +288,128 @@ namespace
         return rt_air;
     }
 
-    auto onecall(const Location &loc, const Config &cfg) {
-        constexpr std::string_view url_path{ "/data/3.0/onecall" };
-
+    auto onecall_4_0(const Location &loc, const Config &cfg) {
         RealtimeWeather rt_weathe{};
         std::array<ForecastedWeather, 3> fc_weather_3d{};
         WeatherAlerts alerts{};
 
         utils::HttpParams params;
-        params.data.emplace("exclude", "minutely,hourly");
         params.data.emplace("units", getUnitName(cfg.unit_type));
 
-        auto func = [&rt_weathe, &fc_weather_3d, &alerts](yyjson_val *j_root) {
-            auto timezone_offset = jvh::getSignedInt(j_root, "timezone_offset");
+        constexpr std::string_view url_current{ "/data/4.0/onecall/current" };
+        auto func_current = [&rt_weathe, &alerts, &cfg](yyjson_val *j_root) {
+            const auto timezone_offset = jvh::getSignedInt(j_root, "timezone_offset");
 
-            // current weather
-            
-            if (auto j_currnet = yyjson_obj_get(j_root, "current");  j_currnet != nullptr) {
+            if (auto *j_current = yyjson_arr_get(yyjson_obj_get(j_root, "data"), 0);
+                j_current != nullptr) {
                 // weather
-                if (auto *j_weather = yyjson_obj_get(j_currnet, "weather"); 
+                if (auto *j_weather = yyjson_arr_get(yyjson_obj_get(j_current, "weather"), 0);
                     j_weather != nullptr) {
                     rt_weathe.weather_main = jvh::getString(j_weather, "main");
                     rt_weathe.weather_description = jvh::getString(j_weather, "description");
                     rt_weathe.weather_icon = jvh::getString(j_weather, "icon");
                 }
 
-                // temprature
-                rt_weathe.temp = jsonGetNumberAsStr1dp(j_currnet, "temp");
-                rt_weathe.temp_feels_like = jsonGetNumberAsStr1dp(j_currnet, "feels_like");
-                
+                //temperature
+                rt_weathe.temp = jsonGetNumberAsStr1dp(j_current, "temp");
+                rt_weathe.temp_feels_like = jsonGetNumberAsStr1dp(j_current, "feels_like");
+
                 // humidity & uvi
-                rt_weathe.humidity = jsonGetNumberAsStr1dp(j_currnet, "humidity");
-                rt_weathe.uv_index = jsonGetNumberAsStr1dp(j_currnet, "uvi");
+                rt_weathe.humidity = jsonGetNumberAsStr1dp(j_current, "humidity");
+                rt_weathe.uv_index = jsonGetNumberAsStr1dp(j_current, "uvi");
 
                 // wind
-                rt_weathe.wind_speed = jsonGetNumberAsStr1dp(j_currnet, "wind_speed");
-                rt_weathe.wind_direction = getWindDirectionText(jvh::getInt(j_currnet, "wind_deg"));
+                rt_weathe.wind_speed = jsonGetNumberAsStr1dp(j_current, "wind_speed");
+                rt_weathe.wind_direction = getWindDirectionText(jvh::getInt(j_current, "wind_deg"));
 
                 // precipitation
-                if (jvh::hasObject(j_currnet, "rain")) {
-                    auto *j_rain = yyjson_obj_get(j_currnet, "rain");
+                if (jvh::hasObject(j_current, "rain")) {
+                    auto *j_rain = yyjson_obj_get(j_current, "rain");
                     rt_weathe.precipitation_rain_1h = jsonGetNumberAsStr1dp(j_rain, "1h");
                 }
-                if (jvh::hasObject(j_currnet, "snow")) {
-                    auto *j_snow = yyjson_obj_get(j_currnet, "snow");
+                if (jvh::hasObject(j_current, "snow")) {
+                    auto *j_snow = yyjson_obj_get(j_current, "snow");
                     rt_weathe.precipitation_snow_1h = jsonGetNumberAsStr1dp(j_snow, "1h");
                 }
 
-                rt_weathe.update_time = utils::timestamp_string_time(jvh::getSignedInt(j_currnet, "dt") + timezone_offset);
-            }
+                // alerts
+                auto fetch_alert_info = [&cfg, timezone_offset](const char *alert_id, Alert &alert) {
+                    const auto url_alert = std::format("/data/4.0/onecall/alert/{}", alert_id);
 
-            // forecast weather 3d
-            auto extractFcWeather = [](yyjson_val *j_daily_fcw, ForecastedWeather &fc_weather) {
+                    auto func_alert = [&alert, timezone_offset](yyjson_val *j_alert_root) {
+                        alert.sender = jvh::getString(j_alert_root, "sender_name");
+                        alert.event = jvh::getString(j_alert_root, "event");
+                        alert.start_datetime = utils::timestamp_string(jvh::getSignedInt(j_alert_root, "start") + timezone_offset);
+                        alert.end_datetime = utils::timestamp_string(jvh::getSignedInt(j_alert_root, "end") + timezone_offset);
+
+                        std::vector<std::string> descriptions;
+                        auto *j_arr_descr = yyjson_obj_get(j_alert_root, "description");
+                        size_t idx, max;
+                        yyjson_val *j_descr;
+                        yyjson_arr_foreach(j_arr_descr, idx, max, j_descr) {
+                            descriptions.push_back(std::format("[{}] {}", jvh::getString(j_descr, "language"), jvh::getString(j_descr, "description")));
+                        }
+                        alert.description = utils::string_join(descriptions, "\n");
+
+                        if (alert.event.empty()) {
+                            std::vector<std::string> tags;
+                            auto j_arr_tags = yyjson_obj_get(j_alert_root, "tags");
+                            yyjson_val *j_tag;
+                            yyjson_arr_foreach(j_arr_tags, idx, max, j_tag) {
+                                if (yyjson_is_str(j_tag)) {
+                                    tags.emplace_back(yyjson_get_str(j_tag));
+                                }
+                            }
+
+                            if (!tags.empty()) {
+                                alert.event = utils::string_join(tags, ", ");
+                            }
+                        }
+                    };
+
+                    if (utils::HttpParams tmp_params{};
+                        !queryFrame(url_alert, tmp_params, cfg.api_key, func_alert)) {
+                        Logger::instance().error(std::format("{} (Weather Alert [{}])", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED), alert_id));
+                    }
+                };
+
+                if (auto *j_arr_alerts = yyjson_obj_get(j_current, "alerts");
+                    j_arr_alerts != nullptr) {
+                    size_t idx, max;
+                    yyjson_val *j_alert_id;
+                    yyjson_arr_foreach(j_arr_alerts, idx, max, j_alert_id) {
+                        if (yyjson_is_str(j_alert_id)) {
+                            Alert alert;
+                            fetch_alert_info(yyjson_get_str(j_alert_id), alert);
+                            if (!alert.description.empty()) {
+                                alerts.push_back(std::move(alert));
+                            }
+                        }
+                    }
+                }
+
+                rt_weathe.update_time = utils::timestamp_string_time(jvh::getSignedInt(j_current, "dt") + timezone_offset);
+            }
+        };
+
+        if (!queryWeatherFrame(loc, url_current, params, cfg.api_key, func_current)) {
+            Logger::instance().error(std::format("{} (Current Weather)", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED)));
+        }
+
+        constexpr std::string_view url_timeline_1day{ "/data/4.0/onecall/timeline/1day" };
+        auto func_fc_weather_3d = [&fc_weather_3d](yyjson_val *j_root) {
+            auto extract_fc_weather = [](yyjson_val *j_daily_fcw, ForecastedWeather &fc_weather) {
                 // weather
-                if (auto *j_weahter = yyjson_obj_get(j_daily_fcw, "weather"); j_weahter != nullptr) {
-                    fc_weather.weather_main = jvh::getString(j_weahter, "main");
-                    fc_weather.weather_description = jvh::getString(j_weahter, "description");
-                    fc_weather.weather_icon = jvh::getString(j_weahter, "icon");
+                if (auto *j_weather = yyjson_arr_get(yyjson_obj_get(j_daily_fcw, "weather"), 0);
+                    j_weather != nullptr) {
+                    fc_weather.weather_main = jvh::getString(j_weather, "main");
+                    fc_weather.weather_description = jvh::getString(j_weather, "description");
+                    fc_weather.weather_icon = jvh::getString(j_weather, "icon");
                 }
 
                 // temperature
-                if (auto *j_temp = yyjson_obj_get(j_daily_fcw, "temp"); j_temp != nullptr) {
+                if (auto *j_temp = yyjson_obj_get(j_daily_fcw, "temp");
+                    j_temp != nullptr) {
                     fc_weather.temp_max = jsonGetNumberAsStr1dp(j_temp, "max");
                     fc_weather.temp_min = jsonGetNumberAsStr1dp(j_temp, "min");
                 }
@@ -369,39 +430,20 @@ namespace
                     fc_weather.precipitation_snow = jsonGetNumberAsStr1dp(j_daily_fcw, "snow");
                 }
                 {
-                    auto prob = yyjson_get_real(yyjson_obj_get(j_daily_fcw, "pop"));
-                    fc_weather.precipitation_probability = std::to_string(static_cast<int>(prob * 100));
+                    const auto pop = yyjson_get_real(yyjson_obj_get(j_daily_fcw, "pop"));
+                    fc_weather.precipitation_probability = std::to_string(static_cast<int>(pop * 100));
                 }
             };
 
-            auto *j_arr_daily_fcw = yyjson_obj_get(j_root, "daily");
-            const auto max_size = std::min(yyjson_arr_size(j_arr_daily_fcw), size_t{ 3 });
+            auto *j_arr_daily_fcw = yyjson_obj_get(j_root, "data");
+            const auto max_size = std::min(yyjson_arr_size(j_arr_daily_fcw), fc_weather_3d.size());
             for (size_t i = 0; i < max_size; ++i) {
-                extractFcWeather(yyjson_arr_get(j_arr_daily_fcw, i), fc_weather_3d[i]);
-            }
-
-            // alerts
-            if (auto *j_arr_alerts = yyjson_obj_get(j_root, "alerts"); j_arr_alerts != nullptr) {
-                auto extractAlert = [timezone_offset](yyjson_val *j_alert) {
-                    return Alert{
-                        .sender = jvh::getString(j_alert, "sender_name"),
-                        .event = jvh::getString(j_alert, "event"),
-                        .start_datetime =  utils::timestamp_string(jvh::getSignedInt(j_alert, "start") + timezone_offset),
-                        .end_datetime = utils::timestamp_string(jvh::getSignedInt(j_alert, "end") + timezone_offset),
-                        .description = jvh::getString(j_alert, "description")
-                    };
-                };
-
-                size_t idx, max;
-                yyjson_val *j_alert;
-                yyjson_arr_foreach(j_arr_alerts, idx, max, j_alert) {
-                    alerts.push_back(extractAlert(j_alert));
-                }
+                extract_fc_weather(yyjson_arr_get(j_arr_daily_fcw, i), fc_weather_3d[i]);
             }
         };
 
-        if (!queryWeatherFrame(loc, url_path, params, cfg.api_key, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED));
+        if (!queryWeatherFrame(loc, url_timeline_1day, params, cfg.api_key, func_fc_weather_3d)) {
+            Logger::instance().error(std::format("{} (Forecast timeline 1day)", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED)));
         }
 
         return std::make_tuple(rt_weathe, fc_weather_3d, alerts);
@@ -534,9 +576,8 @@ std::string DataProviderOpenWeather::WeatherDataBlock::getWeatherSummary() const
         << " PM10: " << getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::AIR_PM10);
 
     // weather alerts
-    oss << "\n";
     for (const auto &alt : alerts) {
-        oss << "[!] " << alt.event << "\n";
+        oss << "\n" << "[!] " << alt.event;
     }
 
     // forecast weather
@@ -665,7 +706,7 @@ WeatherDataCPtr DataProviderOpenWeather::getWeatherData(const Location &loc) con
     
     if (config.use_onecall) {
         auto fut_onecall = std::async(std::launch::async, [this, &loc] {
-            return onecall(loc, config);
+            return onecall_4_0(loc, config);
         });
 
         auto [rt_weather, fc_weather_3d, alerts] = fut_onecall.get();

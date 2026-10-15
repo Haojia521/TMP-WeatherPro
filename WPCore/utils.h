@@ -31,4 +31,6 @@ namespace utils
 
     std::int64_t parse_iso_datetime_to_utc_seconds(std::string_view iso_datatime);
     std::int64_t parse_iso_datetime_to_local_seconds(std::string_view iso_datatime);
+
+    std::string string_join(const std::vector<std::string> &parts, std::string_view delim);
 }

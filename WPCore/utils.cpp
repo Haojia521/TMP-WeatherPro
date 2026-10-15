@@ -231,4 +231,14 @@ namespace utils
         auto utc_seconds = parse_iso_datetime_to_utc_seconds(iso_datatime);
         return current_zone()->to_local(sys_seconds{ seconds{ utc_seconds } }).time_since_epoch().count();
     }
+
+    std::string string_join(const std::vector<std::string> &parts, std::string_view delim) {
+        std::string result;
+
+        for (size_t i = 0; i < parts.size(); ++i) {
+            if (i != 0) result.append(delim);
+            result.append(parts[i]);
+        }
+        return result;
+    }
 }
