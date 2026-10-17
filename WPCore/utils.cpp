@@ -40,7 +40,10 @@ namespace utils
             return res->status;
         } else {
             Logger::instance().error(
-                std::format("INTERNET_RESPONSE_ERROR: {}", httplib::to_string(res.error()))
+                std::format("INTERNET_RESPONSE_ERROR: {}, ssl_error={}, ssl_backend_error=0x{:X}",
+                            httplib::to_string(res.error()),
+                            res.ssl_error(),
+                            res.ssl_backend_error())
             );
             return 0;
         }
@@ -67,70 +70,94 @@ namespace utils
 
     /******************************************************************************************************************/
 
-    // RAII 包装器
-    struct EvpPkeyDeleter { void operator()(EVP_PKEY* p) noexcept { EVP_PKEY_free(p); } };
-    using EvpPkeyPtr = std::unique_ptr<EVP_PKEY, EvpPkeyDeleter>;
+    namespace
+    {
+        // RAII 包装器
+        struct EvpPkeyDeleter { void operator()(EVP_PKEY* p) const noexcept { EVP_PKEY_free(p); } };
+        using EvpPkeyPtr = std::unique_ptr<EVP_PKEY, EvpPkeyDeleter>;
 
-    struct BioDeleter { void operator()(BIO* p) noexcept { BIO_free(p); } };
-    using BioPtr = std::unique_ptr<BIO, BioDeleter>;
+        struct BioDeleter { void operator()(BIO* p) const noexcept { BIO_free(p); } };
+        using BioPtr = std::unique_ptr<BIO, BioDeleter>;
 
-    struct PkeyCtxDeleter { void operator()(EVP_PKEY_CTX* p) noexcept { EVP_PKEY_CTX_free(p); } };
-    using PkeyCtxPtr = std::unique_ptr<EVP_PKEY_CTX, PkeyCtxDeleter>;
+        struct PkeyCtxDeleter { void operator()(EVP_PKEY_CTX* p) const noexcept { EVP_PKEY_CTX_free(p); } };
+        using PkeyCtxPtr = std::unique_ptr<EVP_PKEY_CTX, PkeyCtxDeleter>;
+
+        void log_openssl_error(const std::string_view msg) {
+            const unsigned long err = ERR_get_error();
+            char err_buf[256];
+            ERR_error_string_n(err, err_buf, sizeof(err_buf));
+            Logger::instance().error(std::format("{}: {}", msg, err_buf));
+        }
+    }
 
     std::tuple<std::string, std::string> generateEd25519Keypair() {
+        std::tuple<std::string, std::string> key_pair;
+
+        auto log_error = [](const std::string_view msg) {
+            log_openssl_error(msg);
+            Logger::instance().error(tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED));
+        };
+
         // 初始化 OpenSSL 上下文
-        PkeyCtxPtr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr));
+        const PkeyCtxPtr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr));
         if (!ctx) {
-            //Logger::instance().error(L"Failed to create EVP_PKEY_CTX");
-            Logger::instance().error(std::format("{}(01)", tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED)));
-            return { "", "" };
+            log_error("Failed to create contex");
+            return key_pair;
         }
 
         // 密钥生成初始化
         if (EVP_PKEY_keygen_init(ctx.get()) <= 0) {
-            //Logger::instance().error(L"Failed to initialize key generation");
-            Logger::instance().error(std::format("{}(02)", tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED)));
-            return { "", "" };
+            log_error("Failed to init keygen");
+            return key_pair;
         }
 
         // 生成密钥
         EVP_PKEY* raw_pkey = nullptr;
         if (EVP_PKEY_keygen(ctx.get(), &raw_pkey) <= 0) {
-            //Logger::instance().error(L"Failed to generate key pair");
-            Logger::instance().error(std::format("{}(03)", tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED)));
-            return { "", "" };
+            log_error("Failed to create raw key");
+            return key_pair;
         }
-        EvpPkeyPtr pkey(raw_pkey);
+        const EvpPkeyPtr pkey(raw_pkey);
 
         // 将私钥写入内存 BIO
-        auto export_to_pem = [](const EVP_PKEY* key, std::function<int(BIO*, const EVP_PKEY*)> write_func) -> std::string {
-            BioPtr bio(BIO_new(BIO_s_mem()));
+        auto export_to_pem = [&log_error](const EVP_PKEY* key, const std::function<int(BIO*, const EVP_PKEY*)> &write_func) -> std::optional<std::string> {
+            const BioPtr bio(BIO_new(BIO_s_mem()));
             if (!bio) {
-                //Logger::instance().error(L"Failed to create BIO");
-                Logger::instance().error(std::format("{}(11)", tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED)));
-                return "";
+                log_error("Failed to create BIO");
+                return std::nullopt;
             }
 
             if (write_func(bio.get(), key) <= 0) {
-                //Logger::instance().error(L"Failed to write key to BIO");
-                Logger::instance().error(std::format("{}(12)", tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED)));
-                return "";
+                log_error("Failed to write BIO");
+                return std::nullopt;
             }
 
-            char* data = nullptr;
-            long len = BIO_get_mem_data(bio.get(), &data);
-            return std::string(data, static_cast<size_t>(len));
+            std::string result;
+            char buffer[4096];
+            int bytes;
+            while ((bytes = BIO_read(bio.get(), buffer, sizeof(buffer))) > 0) {
+                result.append(buffer, bytes);
+            }
+            return result;
         };
 
         // 导出公私钥
-        std::string priv_pem = export_to_pem(pkey.get(),
-                                             [](BIO *bio, const EVP_PKEY *k) -> int {
-            return PEM_write_bio_PrivateKey(bio, k, nullptr, nullptr, 0, nullptr, nullptr);
-        }
+        const auto prv_key = export_to_pem(
+            pkey.get(),
+            [](BIO *bio, const EVP_PKEY *k) -> int {
+                return PEM_write_bio_PrivateKey(bio, k, nullptr, nullptr, 0, nullptr, nullptr);
+            }
         );
-        std::string pub_pem = export_to_pem(pkey.get(), PEM_write_bio_PUBKEY);
+        if (prv_key) {
+            std::get<0>(key_pair) = *prv_key;
+        }
 
-        return { std::move(priv_pem), std::move(pub_pem) };
+        if (const auto pub_key = export_to_pem(pkey.get(), PEM_write_bio_PUBKEY);
+            pub_key) {
+            std::get<1>(key_pair) = *pub_key;
+        }
+
+        return key_pair;
     }
 
     /******************************************************************************************************************/
@@ -228,7 +255,7 @@ namespace utils
     std::int64_t parse_iso_datetime_to_local_seconds(std::string_view iso_datatime) {
         using namespace std::chrono;
 
-        auto utc_seconds = parse_iso_datetime_to_utc_seconds(iso_datatime);
+        const auto utc_seconds = parse_iso_datetime_to_utc_seconds(iso_datatime);
         return current_zone()->to_local(sys_seconds{ seconds{ utc_seconds } }).time_since_epoch().count();
     }
 
