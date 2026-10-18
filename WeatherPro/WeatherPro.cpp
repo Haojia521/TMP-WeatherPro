@@ -298,6 +298,87 @@ namespace
             return {};
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// TrafficMonitor 命令
+    
+    struct TMCommand
+    {
+        UINT name_id{ 0 };
+        UINT icon_id{ 0 };
+        std::function<void(void*, void*)> on_command{ nullptr };
+        std::function<int()> is_checked{ nullptr };
+    };
+
+    auto tm_commands = std::to_array(
+        {
+            // draw weather icon
+            TMCommand{
+                .name_id = IDS_DRAW_WEATHER_ICON,
+                .icon_id = 0,
+                .on_command = [](void*, void*) {
+                    auto &mgr = DataManager::Instance();
+                    
+                    auto cfg = mgr.GetConfig();
+                    cfg.draw_weather_icon = !cfg.draw_weather_icon;
+
+                    mgr.SetConfig(cfg);
+                    mgr.SaveConfigs();
+                },
+                .is_checked = [] {
+                    const auto &cfg = DataManager::Instance().GetConfig();
+                    return cfg.draw_weather_icon;
+                }
+            },
+
+            // scroll long text
+            TMCommand{
+                .name_id = IDS_SCROLL_LONG_TEXT,
+                .icon_id = 0,
+                .on_command = [](void*, void*) {
+                    auto &mgr = DataManager::Instance();
+
+                    auto cfg = mgr.GetConfig();
+                    cfg.main_item_scroll_text = !cfg.main_item_scroll_text;
+
+                    mgr.SetConfig(cfg);
+                    mgr.SaveConfigs();
+                },
+                .is_checked = [] {
+                    const auto &cfg = DataManager::Instance().GetConfig();
+                    return cfg.main_item_scroll_text;
+                }
+            },
+
+            // enable dual-line mode
+            TMCommand{
+                .name_id = IDS_ENABLE_DUAL_LINE_MODE,
+                .icon_id = 0,
+                .on_command = [](void*, void*) {
+                    auto &mgr = DataManager::Instance();
+
+                    auto cfg = mgr.GetConfig();
+                    cfg.enable_dual_line_mode = !cfg.enable_dual_line_mode;
+
+                    mgr.SetConfig(cfg);
+                    mgr.SaveConfigs();
+                },
+                .is_checked = [] {
+                    const auto &cfg = DataManager::Instance().GetConfig();
+                    return cfg.enable_dual_line_mode;
+                }
+            },
+
+            // update weather
+            TMCommand{
+                .name_id = IDS_UPDATE_WEATHER,
+                .icon_id = IDI_ICON_UPDATE_WEATHER,
+                .on_command = [](void*, void*) {
+                    WeatherPro::Instance().UpdateWeather(true);
+                },
+            },
+        }
+    );
 }
 
 std::wstring WpVersion::to_wstring() const {
@@ -410,6 +491,48 @@ void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
         current_version = GetWpVerionFromRc(GetCurrentModuleHandle());
         str_current_version = current_version.to_wstring();
     }
+}
+
+int WeatherPro::GetCommandCount() {
+    return tm_commands.size();
+}
+
+const wchar_t* WeatherPro::GetCommandName(int command_index) {
+    if (command_index >= 0 && static_cast<size_t>(command_index) < tm_commands.size()) {
+        const auto &cmd = tm_commands.at(command_index);
+        return cmn::GetStringRes(cmd.name_id);
+    }
+
+    return nullptr;
+}
+
+void* WeatherPro::GetCommandIcon(int command_index) {
+    if (command_index >= 0 && static_cast<size_t>(command_index) < tm_commands.size()) {
+        const auto &cmd = tm_commands.at(command_index);
+        return IconManager::Instance().GetIcon(cmd.icon_id);
+    }
+
+    return nullptr;
+}
+
+void WeatherPro::OnPluginCommand(int command_index, void *hWnd, void *para) {
+    if (command_index >= 0 && static_cast<size_t>(command_index) < tm_commands.size()) {
+        if (const auto &cmd = tm_commands.at(command_index);
+            cmd.on_command) {
+            cmd.on_command(hWnd, para);
+        }
+    }
+}
+
+int WeatherPro::IsCommandChecked(int command_index) {
+    if (command_index >= 0 && static_cast<size_t>(command_index) < tm_commands.size()) {
+        if (const auto &cmd = tm_commands.at(command_index);
+            cmd.is_checked) {
+            return cmd.is_checked();
+        }
+    }
+
+    return 0;
 }
 
 const WpVersion& WeatherPro::GetWpVersion() const {

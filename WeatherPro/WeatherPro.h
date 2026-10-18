@@ -46,6 +46,12 @@ public:
 	void OnInitialize(ITrafficMonitor *pApp) override;
 	void OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) override;
 
+	int GetCommandCount() override;
+	const wchar_t* GetCommandName(int command_index) override;
+	void* GetCommandIcon(int command_index) override;
+	void OnPluginCommand(int command_index, void *hWnd, void *para) override;
+	int IsCommandChecked(int command_index) override;
+
 	void UpdateWeather(bool force = false, bool block_mode = false);
 
 	const WpVersion& GetWpVersion() const;

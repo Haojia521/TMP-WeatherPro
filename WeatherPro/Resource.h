@@ -99,6 +99,7 @@
 #define IDS_WI_TEMPERATURE              1037
 #define IDC_CHECK_SHOW_PM10             1038
 #define IDS_WI_WEATHER                  1038
+#define IDI_ICON_UPDATE_WEATHER         1038
 #define IDC_CHECK_FC_SHOW_HUM           1039
 #define IDS_WI_HUMIDITY                 1039
 #define IDC_CHECK_FC_SHOW_UVI           1040
@@ -132,8 +133,12 @@
 #define IDS_CHECK_NEW_VERSION           1054
 #define IDS_WP_ALREADY_LATEST           1055
 #define IDC_BUTTON_DONATE               1056
+#define IDS_UPDATE_WEATHER              1056
+#define IDS_DRAW_WEATHER_ICON           1057
 #define IDC_COMBO_TIME_SLOT             1058
+#define IDS_SCROLL_LONG_TEXT            1058
 #define IDC_COMBO_WEATHER_ITEM          1059
+#define IDS_ENABLE_DUAL_LINE_MODE       1059
 #define IDC_LIST_PINNED_ITEM_KEYS       1061
 #define IDC_BUTTON_ADD_KEY              1062
 #define IDC_BUTTON_REMOVE_KEY           1063
@@ -152,7 +157,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        1038
+#define _APS_NEXT_RESOURCE_VALUE        1039
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1074
 #define _APS_NEXT_SYMED_VALUE           1000
