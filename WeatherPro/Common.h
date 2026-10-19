@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <WPCore/DataDef.h>
-#include <simpleini/SimpleIni.h>
+#include <SimpleIni.h>
 #include <string>
 
 namespace cmn
@@ -47,4 +47,6 @@ namespace cmn
 
     bool GetSystemLocation(double &longitude, double &latitude);
     bool GetIpLocation(double &longitude, double &latitude, std::string &name);
+
+    std::tuple<std::string, std::string> generateEd25519Keypair();
 }

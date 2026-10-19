@@ -9,8 +9,6 @@
 #include "Common.h"
 #include "DataManager.h"
 
-#include <WPCore/utils.h>
-
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -292,7 +290,7 @@ void OptionsQwDlg::OnBnClickedButtonCreateKeyPair()
 	}
 
 	if (need_to_generate) {
-		auto [prv_key, pub_key] = utils::generateEd25519Keypair();
+		auto [prv_key, pub_key] = cmn::generateEd25519Keypair();
 		std::ofstream ofs_pri(prv_key_filepath);
 		if (ofs_pri.is_open()) {
 			ofs_pri << prv_key;

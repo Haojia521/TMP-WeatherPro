@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include <simpleini/SimpleIni.h>
+#include <SimpleIni.h>
 #include <WPCore/DataDef.h>
 
 #include "IconResources.h"

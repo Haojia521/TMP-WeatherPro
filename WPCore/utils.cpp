@@ -6,10 +6,6 @@
 #include <chrono>
 #include <sstream>
 
-#include <openssl/evp.h>
-#include <openssl/pem.h>
-#include <openssl/err.h>
-
 #include <httplib.h>
 
 namespace utils
@@ -67,100 +63,6 @@ namespace utils
 
         return status_code;
     }
-
-    /******************************************************************************************************************/
-
-    namespace
-    {
-        // RAII 包装器
-        struct EvpPkeyDeleter { void operator()(EVP_PKEY* p) const noexcept { EVP_PKEY_free(p); } };
-        using EvpPkeyPtr = std::unique_ptr<EVP_PKEY, EvpPkeyDeleter>;
-
-        struct BioDeleter { void operator()(BIO* p) const noexcept { BIO_free(p); } };
-        using BioPtr = std::unique_ptr<BIO, BioDeleter>;
-
-        struct PkeyCtxDeleter { void operator()(EVP_PKEY_CTX* p) const noexcept { EVP_PKEY_CTX_free(p); } };
-        using PkeyCtxPtr = std::unique_ptr<EVP_PKEY_CTX, PkeyCtxDeleter>;
-
-        void log_openssl_error(const std::string_view msg) {
-            const unsigned long err = ERR_get_error();
-            char err_buf[256];
-            ERR_error_string_n(err, err_buf, sizeof(err_buf));
-            Logger::instance().error(std::format("{}: {}", msg, err_buf));
-        }
-    }
-
-    std::tuple<std::string, std::string> generateEd25519Keypair() {
-        std::tuple<std::string, std::string> key_pair;
-
-        auto log_error = [](const std::string_view msg) {
-            log_openssl_error(msg);
-            Logger::instance().error(tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED));
-        };
-
-        // 初始化 OpenSSL 上下文
-        const PkeyCtxPtr ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_ED25519, nullptr));
-        if (!ctx) {
-            log_error("Failed to create contex");
-            return key_pair;
-        }
-
-        // 密钥生成初始化
-        if (EVP_PKEY_keygen_init(ctx.get()) <= 0) {
-            log_error("Failed to init keygen");
-            return key_pair;
-        }
-
-        // 生成密钥
-        EVP_PKEY* raw_pkey = nullptr;
-        if (EVP_PKEY_keygen(ctx.get(), &raw_pkey) <= 0) {
-            log_error("Failed to create raw key");
-            return key_pair;
-        }
-        const EvpPkeyPtr pkey(raw_pkey);
-
-        // 将私钥写入内存 BIO
-        auto export_to_pem = [&log_error](const EVP_PKEY* key, const std::function<int(BIO*, const EVP_PKEY*)> &write_func) -> std::optional<std::string> {
-            const BioPtr bio(BIO_new(BIO_s_mem()));
-            if (!bio) {
-                log_error("Failed to create BIO");
-                return std::nullopt;
-            }
-
-            if (write_func(bio.get(), key) <= 0) {
-                log_error("Failed to write BIO");
-                return std::nullopt;
-            }
-
-            std::string result;
-            char buffer[4096];
-            int bytes;
-            while ((bytes = BIO_read(bio.get(), buffer, sizeof(buffer))) > 0) {
-                result.append(buffer, bytes);
-            }
-            return result;
-        };
-
-        // 导出公私钥
-        const auto prv_key = export_to_pem(
-            pkey.get(),
-            [](BIO *bio, const EVP_PKEY *k) -> int {
-                return PEM_write_bio_PrivateKey(bio, k, nullptr, nullptr, 0, nullptr, nullptr);
-            }
-        );
-        if (prv_key) {
-            std::get<0>(key_pair) = *prv_key;
-        }
-
-        if (const auto pub_key = export_to_pem(pkey.get(), PEM_write_bio_PUBKEY);
-            pub_key) {
-            std::get<1>(key_pair) = *pub_key;
-        }
-
-        return key_pair;
-    }
-
-    /******************************************************************************************************************/
 
     std::string timestamp_string(std::int64_t sec) {
         using namespace std::chrono;

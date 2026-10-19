@@ -11,8 +11,8 @@
 #include "IconResources.h"
 #include "MainSettingsDlg.h"
 
-#include <dependencies/simpleini/SimpleIni.h>
-#include <dependencies/yyjson/src/yyjson.h>
+#include <SimpleIni.h>
+#include <yyjson.h>
 
 #include <WPCore/AppLocale.h>
 #include <WPCore/utils.h>
@@ -124,11 +124,11 @@ namespace
     // 版本号
 
     std::time_t last_new_version_checking_timestamp{ 0 };
-    constexpr std::time_t NEW_VERSION_CHECKING_INTERVAL_S{ 12 * 60 * 60 };    // checking new version in every 12 hours
+    constexpr std::time_t NEW_VERSION_CHECKING_INTERVAL_S{ 12LL * 60 * 60 };    // checking new version in every 12 hours
 
     HMODULE GetCurrentModuleHandle()
     {
-        AFX_MANAGE_STATE(AfxGetStaticModuleState());
+        AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
         HMODULE hModule = nullptr;
 
@@ -142,7 +142,7 @@ namespace
     }
 
     WpVersion GetWpVerionFromRc(HMODULE hModule) {
-        AFX_MANAGE_STATE(AfxGetStaticModuleState());
+        AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
         WpVersion wp_version;
 
@@ -494,7 +494,7 @@ void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
 }
 
 int WeatherPro::GetCommandCount() {
-    return tm_commands.size();
+    return static_cast<int>(tm_commands.size());
 }
 
 const wchar_t* WeatherPro::GetCommandName(int command_index) {
