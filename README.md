@@ -6,6 +6,8 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
 
 建议与TrafficMonitor v1.86及以上版本配合使用。
 
+> 注意： 本项目主要面向 Windows x64 开发与调试；x86 版本仅编译、未测试，可能存在问题。
+
 ## 功能特性
 
 - 支持多种天气接口 （配置方法请参考[接口说明](docs/DataSourceGuide.md)）
@@ -17,13 +19,19 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
 - 支持在固定宽度的主窗口区滚动显示长文本
 - 支持丰富的天气信息自定义控制选项
 
-## 版本更新 v1.3.0 
+## 版本更新
+
+**v1.3.0**
 
 - [新增] 在插件右键菜单中添加了常用命令
 - [优化] 适配OpenWeather OneCall 4.0接口
 - [优化] 改进了部分日志信息
 
-> 注意： 本项目主要面向 Windows x64 开发与调试；x86 版本仅编译、未测试，可能存在问题。
+**v1.3.1**
+
+- [修复] 修正了OpenWeather OneCall数据单位显示错误
+
+[查看历史更新](#历史更新)
 
 ## 程序界面介绍
 
