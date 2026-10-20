@@ -389,6 +389,7 @@ namespace
                 }
 
                 rt_weathe.update_time = utils::timestamp_string_time(jvh::getSignedInt(j_current, "dt") + timezone_offset);
+                rt_weathe.unit_type = cfg.unit_type;
             }
         };
 
@@ -397,7 +398,7 @@ namespace
         }
 
         constexpr std::string_view url_timeline_1day{ "/data/4.0/onecall/timeline/1day" };
-        auto func_fc_weather_3d = [&fc_weather_3d](yyjson_val *j_root) {
+        auto func_fc_weather_3d = [&fc_weather_3d, &cfg](yyjson_val *j_root) {
             auto extract_fc_weather = [](yyjson_val *j_daily_fcw, ForecastedWeather &fc_weather) {
                 // weather
                 if (auto *j_weather = yyjson_arr_get(yyjson_obj_get(j_daily_fcw, "weather"), 0);
@@ -439,6 +440,7 @@ namespace
             const auto max_size = std::min(yyjson_arr_size(j_arr_daily_fcw), fc_weather_3d.size());
             for (size_t i = 0; i < max_size; ++i) {
                 extract_fc_weather(yyjson_arr_get(j_arr_daily_fcw, i), fc_weather_3d[i]);
+                fc_weather_3d[i].unit_type = cfg.unit_type;
             }
         };
 
