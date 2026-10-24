@@ -16,8 +16,6 @@
 #include "Common.h"
 #include "DataManager.h"
 
-#include <WPCore/Logger.h>
-
 #include <ranges>
 #include <sstream>
 
@@ -227,7 +225,7 @@ void MainSettingsDlg::OnBnClickedButtonCheckErrorMsg()
 	dlg.str_title = cmn::GetStringRes(IDS_WND_TITLE_LOGGER_MSG);
 
 	std::wostringstream woss;
-	for (const auto &msg : Logger::instance().formattedSnapshot() | std::views::reverse) {
+	for (const auto &msg : WeatherPro::Instance().GetLogs()) {
 		woss << cmn::MultiByte2WideChar(msg) << "\r\n";
 	}
 

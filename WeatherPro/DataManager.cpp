@@ -9,6 +9,8 @@
 #include <thread>
 #include <regex>
 
+#include <spdlog/spdlog.h>
+
 namespace fs = std::filesystem;
 
 namespace
@@ -385,7 +387,10 @@ void DataManager::SaveConfigs() const {
 
     api_collections_->SaveConfigs(ini_file);
 
-    ini_file.SaveFile(config_filepath_.c_str());    // todo: make logging if any error occurs
+    if (const auto code = ini_file.SaveFile(config_filepath_.c_str());
+        code != SI_OK) {
+        spdlog::error("Failed to save the config file. error code: {}", code);
+    }
 }
 
 WeatherApi& DataManager::GetApi() const {

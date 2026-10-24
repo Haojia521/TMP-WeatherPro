@@ -21,7 +21,7 @@ namespace utils
 
     int internetGetWithRetry(const std::string &host, const std::string &path, std::string &content,
                              const HttpParams &params = {}, const HttpHeaders &headers = {},
-                             int retry_times = 3);
+                             int max_attempts = 3);
 
     std::string timestamp_string(std::int64_t sec);
     std::string timestamp_string_date(std::int64_t sec);

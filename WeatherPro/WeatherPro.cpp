@@ -20,6 +20,8 @@
 #include <filesystem>
 #include <future>
 
+#include <spdlog/sinks/stdout_color_sinks.h>
+
 //#ifdef _DEBUG
 //#define new DEBUG_NEW
 //#endif
@@ -461,6 +463,24 @@ void WeatherPro::OnInitialize(ITrafficMonitor *pApp) {
 
         host_app = pApp;
     }
+
+    // initialize logger
+    memory_logger_sink = std::make_shared<spdlog::sinks::ringbuffer_sink_mt>(256);
+
+#ifdef _DEBUG
+    AllocConsole();
+    auto console_color_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+
+    auto logger = std::make_shared<spdlog::logger>("weatehrpro_logger",
+                                                   spdlog::sinks_init_list{ memory_logger_sink, console_color_sink });
+    logger->set_level(spdlog::level::debug);
+#else
+    auto logger = std::make_shared<spdlog::logger>("weatehrpro_logger", memory_logger_sink);
+    logger->set_level(spdlog::level::info);
+#endif
+
+    logger->set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%t] [%^%l%$] %v");
+    spdlog::set_default_logger(logger);
 }
 
 void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
@@ -600,6 +620,14 @@ void WeatherPro::InitPinnedItems() {
     for (const auto &k : keys) {
         pinned_items.emplace_back(k.time_slot, k.item);
     }
+}
+
+std::vector<std::string> WeatherPro::GetLogs() const {
+    if (memory_logger_sink != nullptr) {
+        return memory_logger_sink->last_formatted();
+    }
+
+    return {};
 }
 
 ITMPlugin* TMPluginGetInstance()

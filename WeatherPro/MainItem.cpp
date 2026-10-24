@@ -6,7 +6,6 @@
 #include "resource.h"
 #include "Common.h"
 
-#include <mutex>
 #include <memory>
 #include <optional>
 

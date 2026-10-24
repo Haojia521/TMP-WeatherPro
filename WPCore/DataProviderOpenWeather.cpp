@@ -1,13 +1,14 @@
 ﻿#include "DataProviderOpenWeather.h"
-#include "Logger.h"
 #include "utils.h"
 #include "AppLocale.h"
 #include "JsonValueHelper.h"
 
+#include <format>
 #include <functional>
 #include <future>
 
 #include <yyjson.h>
+#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -111,14 +112,13 @@ namespace
                     func(root);
                     succeed = true;
                 } else {
-                    Logger::instance().error(std::format("[{}] {}", status_code, jvh::getString(root, "message")));
+                    spdlog::error("[{}] {}", status_code, jvh::getString(root, "message"));
                 }
             } else {
-                Logger::instance().error(tr::txt(tr::TID::ERR_PARSING_JSON_FAILED));
+                spdlog::error(tr::txt(tr::TID::ERR_PARSING_JSON_FAILED));
             }
         } else {
-            Logger::instance().error(
-                std::format("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE)));
+            spdlog::error("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE));
         }
 
         return succeed;
@@ -127,7 +127,7 @@ namespace
     bool queryWeatherFrame(const Location &loc, std::string_view path, utils::HttpParams &params, const std::string &app_id,
                            const std::function<void(yyjson_val*)> &func) {
         if (loc.longitude.empty() || loc.latitude.empty()) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_NO_LONG_LAT));
+            spdlog::error(tr::txt(tr::TID::ERR_NO_LONG_LAT));
             return false;
         }
 
@@ -188,7 +188,7 @@ namespace
         };
 
         if (!queryWeatherFrame(loc, url_path, params, cfg.api_key, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
         return rt_weather;
@@ -250,7 +250,7 @@ namespace
         };
 
         if (!queryWeatherFrame(loc, std::string{ url_path }, params, cfg.api_key, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
         }
 
         return fc_weather_3d;
@@ -282,7 +282,7 @@ namespace
         };
 
         if (!queryWeatherFrame(loc, url_path, params, cfg.api_key, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTAQ_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTAQ_FAILED));
         }
 
         return rt_air;
@@ -369,7 +369,7 @@ namespace
 
                     if (utils::HttpParams tmp_params{};
                         !queryFrame(url_alert, tmp_params, cfg.api_key, func_alert)) {
-                        Logger::instance().error(std::format("{} (Weather Alert [{}])", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED), alert_id));
+                        spdlog::error("{} (Weather Alert [{}])", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED), alert_id);
                     }
                 };
 
@@ -394,7 +394,7 @@ namespace
         };
 
         if (!queryWeatherFrame(loc, url_current, params, cfg.api_key, func_current)) {
-            Logger::instance().error(std::format("{} (Current Weather)", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED)));
+            spdlog::error("{} (Current Weather)", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED));
         }
 
         constexpr std::string_view url_timeline_1day{ "/data/4.0/onecall/timeline/1day" };
@@ -445,7 +445,7 @@ namespace
         };
 
         if (!queryWeatherFrame(loc, url_timeline_1day, params, cfg.api_key, func_fc_weather_3d)) {
-            Logger::instance().error(std::format("{} (Forecast timeline 1day)", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED)));
+            spdlog::error("{} (Forecast timeline 1day)", tr::txt(tr::TID::ERR_QUERY_ONECALL_FAILED));
         }
 
         return std::make_tuple(rt_weathe, fc_weather_3d, alerts);
@@ -498,7 +498,7 @@ namespace
             return true;
         }
 
-        Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
+        spdlog::error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
         return false;
     }
 
@@ -531,7 +531,7 @@ namespace
             return true;
         }
 
-        Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
+        spdlog::error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
         return false;
     }
 
@@ -675,7 +675,7 @@ std::string DataProviderOpenWeather::WeatherDataBlock::getWeatherItem(WeatherTim
 
 bool DataProviderOpenWeather::validateApiAuthentication() const {
     if (config.api_key.empty()) {
-        Logger::instance().error(tr::txt(tr::TID::ERR_AUTH_NO_APP_KEY));
+        spdlog::error(tr::txt(tr::TID::ERR_AUTH_NO_APP_KEY));
         return false;
     }
 

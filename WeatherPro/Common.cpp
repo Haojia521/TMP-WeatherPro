@@ -8,9 +8,10 @@
 #include <unordered_map>
 
 #include <WPCore/AppLocale.h>
-#include <WPCore/Logger.h>
 #include <WPCore/utils.h>
+
 #include <yyjson.h>
+#include <spdlog/spdlog.h>
 
 #include <winrt/base.h>
 #include <winrt/Windows.Foundation.h>
@@ -284,7 +285,7 @@ namespace cmn
             const unsigned long err = ERR_get_error();
             char err_buf[256];
             ERR_error_string_n(err, err_buf, sizeof(err_buf));
-            Logger::instance().error(std::format("{}: {}", msg, err_buf));
+            spdlog::error("{}: {}", msg, err_buf);
         }
     }
 
@@ -292,8 +293,7 @@ namespace cmn
         std::tuple<std::string, std::string> key_pair;
 
         auto log_error = [](const std::string_view msg) {
-            log_openssl_error(msg);
-            Logger::instance().error(tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED));
+            log_openssl_error(std::format("{}-{}", tr::txt(tr::TID::ERR_GEN_KEYPAIR_FAILED), msg));
         };
 
         // 初始化 OpenSSL 上下文

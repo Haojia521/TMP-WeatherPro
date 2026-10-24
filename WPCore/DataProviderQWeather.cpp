@@ -1,5 +1,4 @@
 ﻿#include "DataProviderQWeather.h"
-#include "Logger.h"
 #include "utils.h"
 #include "AppLocale.h"
 #include "JsonValueHelper.h"
@@ -14,6 +13,7 @@
 #include <mutex>
 
 #include <jwt-cpp/jwt.h>
+#include <spdlog/spdlog.h>
 #include <yyjson.h>
 
 namespace
@@ -48,7 +48,7 @@ namespace
 
             ifs.close();
         } else {
-            Logger::instance().error(tr::txt(tr::TID::ERR_JWT_CANNOT_OPEN_PRV_FILE));
+            spdlog::error(tr::txt(tr::TID::ERR_JWT_CANNOT_OPEN_PRV_FILE));
             return {};
         }
 
@@ -61,11 +61,10 @@ namespace
                 .sign(jwt::algorithm::ed25519("", private_key));
 
             timestamp = now;
-            token_cache = token;
+            token_cache = std::move(token);
         }
         catch (const std::exception &e) {
-            Logger::instance().error(e.what());
-
+            spdlog::error(e.what());
             token_cache.clear();
         }
 
@@ -117,7 +116,6 @@ namespace
             http_params.data.emplace("key", cfg.app_key);
         }
 
-        //auto lang = std::string{ tr::txt(tr::TID::LC_QWEATHER) };
         http_params.data.emplace("lang", tr::txt(tr::TID::LC_QWEATHER));
 
         const auto host = std::format("https://{}", cfg.api_host);
@@ -137,8 +135,7 @@ namespace
                 if (status_code == 200) {
                     // compatible with error code v1
                     if (jvh::hasObject(root, "code") && jvh::getString(root, "code") != "200") {
-                        Logger::instance().error(
-                            std::format("{}: {}", tr::txt(tr::TID::ERR_CODE), jvh::getString(root, "code")));
+                        spdlog::error("{}: {}", tr::txt(tr::TID::ERR_CODE), jvh::getString(root, "code"));
                     } else {
                         func(root);
                         succeed = true;
@@ -146,15 +143,14 @@ namespace
                 } else {
                     // compatible with error code v2
                     if (jvh::hasObject(root, "error")) {
-                        Logger::instance().error(formatErrorV2(yyjson_obj_get(root, "error")));
+                        spdlog::error(formatErrorV2(yyjson_obj_get(root, "error")));
                     } else
-                        Logger::instance().error(
-                            std::format("[{}] {}", status_code, tr::txt(tr::TID::ERR_UNKOWN)));
+                        spdlog::error("[{}] {}", status_code, tr::txt(tr::TID::ERR_UNKOWN));
                 }
             } else
-                Logger::instance().error(tr::txt(tr::TID::ERR_INVALID_JSON));
+                spdlog::error(tr::txt(tr::TID::ERR_INVALID_JSON));
         } else
-            Logger::instance().error(std::format("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE)));
+            spdlog::error(std::format("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE)));
 
         return succeed;
     }
@@ -193,7 +189,7 @@ namespace
         };
 
         if (!queryFrame(std::string{ url_path }, url_params, cfg, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
         return rt_weather;
@@ -203,7 +199,7 @@ namespace
         DataProviderQWeather::RealtimeAirQuality rt_air{};
 
         if (loc.longitude.empty() || loc.latitude.empty()) {
-            Logger::instance().error(std::format("{} (queryRealtimeAirQuality)", tr::txt(tr::TID::ERR_NO_LONG_LAT)));
+            spdlog::error("{} (queryRealtimeAirQuality)", tr::txt(tr::TID::ERR_NO_LONG_LAT));
             return rt_air;
         }
 
@@ -251,7 +247,7 @@ namespace
         };
 
         if (!queryFrame(url_path, utils::HttpParams{}, cfg, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTAQ_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTAQ_FAILED));
         }
 
         return rt_air;
@@ -292,7 +288,7 @@ namespace
         };
 
         if (!queryFrame(std::string{ url_path }, url_params, cfg, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
         }
 
         return fc_weather_3d;
@@ -302,7 +298,7 @@ namespace
         DataProviderQWeather::RealtimeWeatherAlerts rt_alerts{};
 
         if (loc.longitude.empty() || loc.latitude.empty()) {
-            Logger::instance().error(std::format("{} (queryRealtimeWeatherAlerts)", tr::txt(tr::TID::ERR_NO_LONG_LAT)));
+            spdlog::error("{} (queryRealtimeWeatherAlerts)", tr::txt(tr::TID::ERR_NO_LONG_LAT));
             return rt_alerts;
         }
 
@@ -369,7 +365,7 @@ namespace
         };
 
         if (!queryFrame(url_path, utils::HttpParams{}, cfg, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTWA_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTWA_FAILED));
         }
 
         return rt_alerts;
@@ -444,7 +440,7 @@ namespace
             return true;
         }
 
-        Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
+        spdlog::error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
         return false;
     }
 }
@@ -579,23 +575,23 @@ std::string DataProviderQWeather::WeatherDataBlock::getWeatherItem(WeatherTimeSl
 bool DataProviderQWeather::validateApiAuthentication() const
 {
     if (config_app.api_host.empty()) {
-        Logger::instance().error(tr::txt(tr::TID::ERR_AUTH_NO_API_HOST));
+        spdlog::error(tr::txt(tr::TID::ERR_AUTH_NO_API_HOST));
         return false;
     }
 
     if (config_app.enable_jwt) {
         if (config_app.project_id.empty()) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_AUTH_JWT_NO_PROJ_ID));
+            spdlog::error(tr::txt(tr::TID::ERR_AUTH_JWT_NO_PROJ_ID));
             return false;
         }
 
         if (config_app.credential_id.empty()) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_AUTH_JWT_NO_CRED_ID));
+            spdlog::error(tr::txt(tr::TID::ERR_AUTH_JWT_NO_CRED_ID));
             return false;
         }
     } else {
         if (config_app.app_key.empty()) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_AUTH_NO_APP_KEY));
+            spdlog::error(tr::txt(tr::TID::ERR_AUTH_NO_APP_KEY));
             return false;
         }
     }

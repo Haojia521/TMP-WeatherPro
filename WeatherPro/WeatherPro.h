@@ -13,6 +13,9 @@
 
 #include <vector>
 
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/ringbuffer_sink.h>
+
 struct WpVersion
 {
 	unsigned int major{ 0 };
@@ -59,6 +62,8 @@ public:
 	bool HasNewVersionWpPackage() const;
 	void CheckNewVersion();
 
+	std::vector<std::string> GetLogs() const;
+
 private:
 	void InitPinnedItems();
 	void UpdateWeather(std::time_t ts, bool force = false, bool block_mode = false);
@@ -70,6 +75,8 @@ private:
 
 	MainItem main_item;
 	std::vector<PinnedItem> pinned_items;
+
+	std::shared_ptr<spdlog::sinks::ringbuffer_sink_mt> memory_logger_sink;
 
 	ITrafficMonitor *host_app{ nullptr };
 };

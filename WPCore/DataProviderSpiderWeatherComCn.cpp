@@ -1,6 +1,5 @@
 ﻿#include "DataProviderSpiderWeatherComCn.h"
 #include "AppLocale.h"
-#include "Logger.h"
 #include "utils.h"
 #include "JsonValueHelper.h"
 
@@ -10,6 +9,7 @@
 #include <sstream>
 
 #include <yyjson.h>
+#include <spdlog/spdlog.h>
 
 namespace
 {
@@ -123,7 +123,7 @@ namespace
             return func(content);
         }
 
-        Logger::instance().error(std::format("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE)));
+        spdlog::error("[{}] {}", status_code, tr::txt(tr::TID::ERR_INTERNET_EMPTY_RESPONSE));
         return false;
     }
 
@@ -176,13 +176,13 @@ namespace
 
                 return true;
             } else {
-                Logger::instance().error(tr::txt(tr::TID::ERR_INVALID_JSON));
+                spdlog::error(tr::txt(tr::TID::ERR_INVALID_JSON));
                 return false;
             }
         };
 
         if (!queryFrame(url_host, url_path, params, headers, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
         return rt_weather;
@@ -251,17 +251,17 @@ namespace
 
                     return true;
                 } else {
-                    Logger::instance().error(tr::txt(tr::TID::ERR_INVALID_JSON));
+                    spdlog::error(tr::txt(tr::TID::ERR_INVALID_JSON));
                 }
             } else {
-                Logger::instance().error(tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED));
+                spdlog::error(tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED));
             }
 
             return false;
         };
 
         if (!queryFrame(url_host, url_path, params, headers, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
         return rt_weather;
@@ -314,11 +314,11 @@ namespace
                             fc_weather_3d[i].temp_night = temp_values_night[i + 1][0];
                         }
                     } else {
-                        Logger::instance().error(std::format("{}(temperature)", tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED)));
+                        spdlog::error("{}(temperature)", tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED));
                         return false;
                     }
                 } else {
-                    Logger::instance().error(tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED));
+                    spdlog::error(tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED));
                     return false;
                 }
             }
@@ -334,7 +334,7 @@ namespace
                         fc_weather_3d[i].weather_text_night = weather_data[i * 2 + 1][2];
                     }
                 } else {
-                    Logger::instance().error(std::format("{}(weather)", tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED)));
+                    spdlog::error("{}(weather)", tr::txt(tr::TID::ERR_EXTRACT_DATA_FAILED));
                     return false;
                 }
             }
@@ -343,7 +343,7 @@ namespace
         };
 
         if (!queryFrame(url_host, url_path, params, headers, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_FCW3D_FAILED));
         }
 
         return fc_weather_3d;
@@ -394,13 +394,13 @@ namespace
 
                 return true;
             } else {
-                Logger::instance().error(tr::txt(tr::TID::ERR_INVALID_JSON));
+                spdlog::error(tr::txt(tr::TID::ERR_INVALID_JSON));
                 return false;
             }
         };
 
         if (!queryFrame(std::string{ url_host }, url_path, params, headers, func)) {
-            Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_RTWA_FAILED));
+            spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTWA_FAILED));
         }
 
         return alerts;
@@ -470,7 +470,7 @@ namespace
             return true;
         }
 
-        Logger::instance().error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
+        spdlog::error(tr::txt(tr::TID::ERR_QUERY_GEOCODING_FAILED));
         return false;
     }
 
@@ -525,7 +525,7 @@ namespace
             }
 
             if (loc.id.empty() || loc.name.empty()) {
-                Logger::instance().error(std::format("Parsing locaiton Fialed: {}", content));
+                spdlog::error("Parsing locaiton Fialed: {}", content);
                 return false;
             }
             
@@ -533,7 +533,7 @@ namespace
         };
 
         if (!queryFrame(url_host, url_path, params, headers, func)) {
-            Logger::instance().error("Failed to query location from website");
+            spdlog::error("Failed to query location from website");
         }
 
         return !loc.id.empty() && !loc.name.empty();
@@ -671,7 +671,7 @@ bool DataProviderSpiderWeatherComCn::geocodingReverse(const std::string &latitud
 
 WeatherDataCPtr DataProviderSpiderWeatherComCn::getWeatherData(const Location &loc) const {
     if (loc.id.empty()) {
-        Logger::instance().error("No location id");
+        spdlog::error("No location id");
         return nullptr;
     }
 

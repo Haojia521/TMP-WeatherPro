@@ -1,21 +1,40 @@
 ﻿#include "utils.h"
 #include "AppLocale.h"
-#include "Logger.h"
 
 #include <format>
 #include <chrono>
 #include <sstream>
 
 #include <httplib.h>
+#include <spdlog/spdlog.h>
 
 namespace utils
 {
+    namespace
+    {
+        template <typename Map>
+        std::string joinMapKeys(const Map& m) {
+            std::string out = "[";
+            bool first = true;
+            for (const auto& [k, _] : m) {
+                if (!first) out += ',';
+                out += k;
+                first = false;
+            }
+            out += ']';
+            return out;
+        }
+    }
+
     int internetGet(const std::string &host, const std::string &path, std::string &content,
                     const HttpParams &params/* = {}*/, const HttpHeaders &headers/* = {}*/)
     {
         using namespace std::chrono_literals;
 
         content.clear();
+
+        SPDLOG_DEBUG("internetGet: host={}, path={}, params={}, headers={}",
+                     host, path, joinMapKeys(params.data), joinMapKeys(headers.data));
 
         httplib::Client clt(host);
         clt.set_connection_timeout(5s);
@@ -30,38 +49,60 @@ namespace utils
         auto res = clt.Get(path, lib_params, lib_headers);
 
         if (res) {
-            if (res->status == 404) return res->status;
+            if (res->status >= 400) {
+                spdlog::warn("internetGet: HTTP {}, host={}, path={}",
+                             res->status, host, path);
+            }
 
             content = std::move(res->body);
             return res->status;
-        } else {
-            Logger::instance().error(
-                std::format("INTERNET_RESPONSE_ERROR: {}, ssl_error={}, ssl_backend_error=0x{:X}",
-                            httplib::to_string(res.error()),
-                            res.ssl_error(),
-                            res.ssl_backend_error())
-            );
-            return 0;
         }
+
+        spdlog::error("internetGet failed: {}. host={}, path={}, params={}, headers={}, "
+                      "ssl_error={}, ssl_backend_error=0x{:X}",
+                      httplib::to_string(res.error()),
+                      host,
+                      path,
+                      joinMapKeys(params.data),
+                      joinMapKeys(headers.data),
+                      res.ssl_error(),
+                      res.ssl_backend_error());
+        return 0;
     }
 
     int internetGetWithRetry(const std::string &host, const std::string &path, std::string &content,
                              const HttpParams &params/* = {}*/, const HttpHeaders &headers/* = {}*/,
-                             int retry_times/* = 3*/) {
+                             int max_attempts/* = 3*/) {
         // retry getting data if internet connection issues occurred
-        auto status_code{ 0 };
-        do {
-            status_code = utils::internetGet(host, path, content, params, headers);
+
+        max_attempts = std::clamp(max_attempts, 1, 10);    // avoid excessively large maximum retry count values
+
+        for (int attempt = 1; attempt <= max_attempts; ++attempt) {
+            auto status_code = internetGet(host, path, content, params, headers);
+
+            // success
             if (status_code != 0) {
+                if (attempt > 1) {
+                    spdlog::info("internetGetWithRetry recovered: host={}, path={}, attempt={}/{}, status={}",
+                                 host, path, attempt, max_attempts, status_code);
+                }
+
+                return status_code;
+            }
+
+            spdlog::warn("internetGetWithRetry: attempt {}/{} failed, host={}, path={}",
+                         attempt, max_attempts, host, path);
+
+            if (attempt == max_attempts) {
                 break;
             }
 
-            using namespace std::chrono_literals;
-            std::this_thread::sleep_for(5s);
-            --retry_times;
-        } while (retry_times > 0);
+            std::this_thread::sleep_for(std::chrono::seconds(3));
+        }
 
-        return status_code;
+        spdlog::error("internetGetWithRetry exhausted: host={}, path={}, attempts={}",
+                      host, path, max_attempts);
+        return 0;
     }
 
     std::string timestamp_string(std::int64_t sec) {
@@ -148,7 +189,7 @@ namespace utils
             }
         }
         catch (const std::exception &e) {
-            Logger::instance().error(e.what());
+            spdlog::error(e.what());
         }
 
         return utc_seconds;
