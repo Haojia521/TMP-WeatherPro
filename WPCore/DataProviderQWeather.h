@@ -27,6 +27,8 @@ public:
         bool show_realtime_wind{ true };
         bool show_realtime_wind_scale{ true };
         bool show_realtime_humidity{ true };
+        bool show_realtime_uvi{ true };
+        bool show_realtime_percipitation{ true };
         bool show_realtime_pm2p5{ true };
         bool show_realtime_pm10{ false };
         bool show_forecasted_uv_index{ false };
@@ -45,6 +47,10 @@ public:
         std::string wind_scale;
         std::string wind_speed;
         std::string humidity;
+        std::string precipitation_amount;
+        std::string precipitation_intensity;
+        std::string precipitation_type;
+        std::string uv_index;
         std::string update_time;
     };
 

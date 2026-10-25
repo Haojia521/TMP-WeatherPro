@@ -94,16 +94,22 @@ namespace
         return std::format("{:%F %R}", sys_seconds{ seconds{sec} });
     }
 
-    bool queryFrame(const std::string &path, const utils::HttpParams &params,
-                    const DataProviderQWeather::ConfigApp &cfg,
+    using ConfigApp = DataProviderQWeather::ConfigApp;
+    using ConfigFormatting = DataProviderQWeather::ConfigFormatting;
+    using RealtimeWeather = DataProviderQWeather::RealtimeWeather;
+    using ForcastedWeather = DataProviderQWeather::ForecastedWeather;
+    using AirQualityIndex = DataProviderQWeather::AirQualityIndex;
+    using RealtimeAirQuality = DataProviderQWeather::RealtimeAirQuality;
+    using WeatherAlert = DataProviderQWeather::WeatherAlert;
+    using RealtimeWeatherAlerts = DataProviderQWeather::RealtimeWeatherAlerts;
+
+    bool queryFrame(const std::string &path, utils::HttpParams &params,
+                    const ConfigApp &cfg,
                     const std::function<void(yyjson_val*)> &func)
     {
         bool succeed{ false };
 
-        utils::HttpParams http_params;
-        http_params.data.insert(params.data.begin(), params.data.end());
-
-        utils::HttpHeaders http_headers;
+        utils::HttpHeaders headers;
 
         if (cfg.enable_jwt) {
             auto jwt = generateJwt(cfg);
@@ -111,17 +117,17 @@ namespace
                 return false;
             }
 
-            http_headers.data.emplace("Authorization", std::format("Bearer {}", jwt));
+            headers.data.emplace("Authorization", std::format("Bearer {}", jwt));
         } else {
-            http_params.data.emplace("key", cfg.app_key);
+            params.data.emplace("key", cfg.app_key);
         }
 
-        http_params.data.emplace("lang", tr::txt(tr::TID::LC_QWEATHER));
+        params.data.emplace("lang", tr::txt(tr::TID::LC_QWEATHER));
 
         const auto host = std::format("https://{}", cfg.api_host);
         std::string content;
 
-        auto status_code = utils::internetGetWithRetry(host, path, content, http_params, http_headers);
+        auto status_code = utils::internetGetWithRetry(host, path, content, params, headers);
 
         if (!content.empty()) {
             std::unique_ptr<yyjson_doc, void(*)(yyjson_doc*)> doc(
@@ -155,40 +161,78 @@ namespace
         return succeed;
     }
 
-    DataProviderQWeather::RealtimeWeather queryRealtimeWeather(const Location &loc, const DataProviderQWeather::ConfigApp &cfg) {
-        constexpr std::string_view url_path{ "/v7/weather/now" };
+    RealtimeWeather queryRealtimeWeather(const Location &loc, const ConfigApp &cfg) {
+        RealtimeWeather rt_weather{};
 
-        DataProviderQWeather::RealtimeWeather rt_weather{};
-
-        std::string query;
-        if (!loc.latitude.empty() && !loc.longitude.empty()) {
-            query = std::format("{},{}", loc.longitude, loc.latitude);
-        } else {
-            query = loc.id;
+        if (loc.longitude.empty() || loc.latitude.empty()) {
+            spdlog::error("{} (queryRealtimeWeather)", tr::txt(tr::TID::ERR_NO_LONG_LAT));
+            return rt_weather;
         }
 
-        utils::HttpParams url_params;
-        url_params.data.emplace("location", query);
+        const auto url_path = std::format("/weather/v1/current/{}/{}",
+                                          loc.latitude, loc.longitude);
 
-        auto func = [&rt_weather](yyjson_val *j_val) {
-            auto *now_obj = yyjson_obj_get(j_val, "now");
+        auto parse_func = [&rt_weather](yyjson_val *j_root) {
+            // temperature
+            auto *j_temp = yyjson_obj_get(j_root, "temperature");
+            rt_weather.temp = std::format("{:.1f}{}",
+                                          jvh::getReal(j_temp, "value"),
+                                          jvh::getStringView(j_temp, "unit"));
+            auto *j_feels = yyjson_obj_get(j_root, "feelsLike");
+            rt_weather.temp_feels_like = std::format("{:.1f}{}",
+                                                     jvh::getReal(j_feels, "value"),
+                                                     jvh::getStringView(j_feels, "unit"));
+            
+            {
+                auto now = std::chrono::floor<std::chrono::minutes>(
+                    std::chrono::current_zone()->to_local(std::chrono::system_clock::now()));
+                rt_weather.update_time = std::format("{:%H:%M}", now);
+            }
 
-            rt_weather.temp = jvh::getString(now_obj, "temp");
-            rt_weather.temp_feels_like = jvh::getString(now_obj, "feelsLike");
-            rt_weather.update_time = timestamp_string_hhmm(
-                utils::parse_iso_datetime_to_local_seconds(
-                    jvh::getString(now_obj, "obsTime")
-                )
-            );
-            rt_weather.weather_text = jvh::getString(now_obj, "text");
-            rt_weather.weather_code = jvh::getString(now_obj, "icon");
-            rt_weather.wind_direction = jvh::getString(now_obj, "windDir");
-            rt_weather.wind_scale = jvh::getString(now_obj, "windScale");
-            rt_weather.wind_speed = jvh::getString(now_obj, "windSpeed");
-            rt_weather.humidity = jvh::getString(now_obj, "humidity");
+            // weather condition
+            auto *j_weather = yyjson_obj_get(j_root, "condition");
+            rt_weather.weather_text = jvh::getStringView(j_weather, "text");
+            rt_weather.weather_code = jvh::getStringView(j_weather, "code");
+
+            // wind
+            auto *j_wind = yyjson_obj_get(j_root, "wind");
+
+            auto *j_wind_direction = yyjson_obj_get(j_wind, "direction");
+            rt_weather.wind_direction = utils::get_direction_text(jvh::getStringView(j_wind_direction, "compass"));
+
+            auto *j_wind_speed = yyjson_obj_get(j_wind, "speed");
+            rt_weather.wind_speed = std::format("{:.2f}{}",
+                                                jvh::getReal(j_wind_speed, "value"),
+                                                jvh::getStringView(j_wind_speed, "unit"));
+
+            rt_weather.wind_scale = std::to_string(jvh::getInt(j_wind, "scale"));
+
+            // humidity
+            rt_weather.humidity = std::format("{:.0f}%",
+                                              jvh::getReal(j_root, "humidity") * 100.0);
+
+            // precipitation
+            auto *j_precipitation = yyjson_obj_get(j_root, "precipitation");
+
+            rt_weather.precipitation_type = jvh::getStringView(j_precipitation, "type");
+            if (rt_weather.precipitation_type != "none") {
+                auto *j_prec_amount = yyjson_obj_get(j_precipitation, "amount");
+                rt_weather.precipitation_amount = std::format("{:.2f}{}",
+                                                              jvh::getReal(j_prec_amount, "value"),
+                                                              jvh::getStringView(j_prec_amount, "unit"));
+                
+                auto *j_prec_intensity = yyjson_obj_get(j_precipitation, "intensity");
+                rt_weather.precipitation_intensity = std::format("{:.2f}{}",
+                                                                 jvh::getReal(j_prec_intensity, "value"),
+                                                                 jvh::getStringView(j_prec_intensity, "unit"));
+            }
+
+            // uv index
+            rt_weather.uv_index = std::to_string(jvh::getInt(j_root, "uvIndex"));
         };
 
-        if (!queryFrame(std::string{ url_path }, url_params, cfg, func)) {
+        if (utils::HttpParams empty_params;
+            !queryFrame(url_path, empty_params, cfg, parse_func)) {
             spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTW_FAILED));
         }
 
@@ -246,7 +290,8 @@ namespace
             }
         };
 
-        if (!queryFrame(url_path, utils::HttpParams{}, cfg, func)) {
+        if (utils::HttpParams empty_params;
+            !queryFrame(url_path, empty_params, cfg, func)) {
             spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTAQ_FAILED));
         }
 
@@ -364,7 +409,8 @@ namespace
             }
         };
 
-        if (!queryFrame(url_path, utils::HttpParams{}, cfg, func)) {
+        if (utils::HttpParams empty_params;
+            !queryFrame(url_path, empty_params, cfg, func)) {
             spdlog::error(tr::txt(tr::TID::ERR_QUERY_RTWA_FAILED));
         }
 
@@ -458,13 +504,20 @@ std::string DataProviderQWeather::WeatherDataBlock::getWeatherSummary() const {
 
     // wind
     if (cfg.show_realtime_wind) {
-        oss << "\n" << getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::WIND);
+        const auto wind = getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::WIND);
+        oss << "\n" << std::vformat(tr::txt(tr::TID::FMT_TMP_WIND),
+                                    std::make_format_args(wind));
     }
 
     // humidity
     if (cfg.show_realtime_humidity) {
         oss << std::format(" {}: {}", tr::txt(tr::TID::FMT_HUMIDITY),
                            getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::HUMIDITY));
+    }
+
+    // uv index
+    if (cfg.show_realtime_uvi) {
+        oss << std::format(" UVI: {}", getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::UV_INDEX));
     }
 
     // air quality
@@ -476,6 +529,23 @@ std::string DataProviderQWeather::WeatherDataBlock::getWeatherSummary() const {
     }
     if (cfg.show_realtime_pm10) {
         oss << " PM10: " << getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::AIR_PM10);
+    }
+
+    // precipitation
+    if (cfg.show_realtime_percipitation) {
+        if (!realtime_weather.precipitation_intensity.empty()) {
+            oss << "\n"
+                << std::format("{}: {}",
+                               tr::txt(tr::TID::FMT_PRECIPITATION_INTENSITY),
+                               getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::PRECIPITATION));
+        }
+
+        if (!realtime_weather.precipitation_amount.empty()) {
+            oss << "\n"
+                << std::format("{}: {}",
+                               tr::txt(tr::TID::FMT_PRECIPITATION_IN_1H),
+                               realtime_weather.precipitation_amount);
+        }
     }
 
     // weather alerts
@@ -510,16 +580,16 @@ std::string DataProviderQWeather::WeatherDataBlock::getWeatherItem(WeatherTimeSl
     if (time_slot == WeatherTimeSlot::REALTIME) {
         if (item == WeatherItem::TEMPERATURE) {
             if (cfg.show_realtime_temp_feels_like) {
-                return std::format("{}℃", realtime_weather.temp_feels_like);
+                return realtime_weather.temp_feels_like;
             } else {
-                return std::format("{}℃", realtime_weather.temp);
+                return realtime_weather.temp;
             }
         } else if (item == WeatherItem::WEATHER_TEXT) {
             return realtime_weather.weather_text;
         } else if (item == WeatherItem::WEATHER_CODE) {
             return realtime_weather.weather_code;
         } else if (item == WeatherItem::HUMIDITY) {
-            return std::format("{} %", realtime_weather.humidity);
+            return realtime_weather.humidity;
         } else if (item == WeatherItem::WIND) {
             auto wind_direction =
                 std::vformat(tr::txt(tr::TID::FMT_TMP_WIND_DIRECTION),
@@ -528,7 +598,15 @@ std::string DataProviderQWeather::WeatherDataBlock::getWeatherItem(WeatherTimeSl
                 std::vformat(tr::txt(tr::TID::FMT_TMP_WIND_SCALE),
                              std::make_format_args(realtime_weather.wind_scale)) :
                 std::format("{}km/h", realtime_weather.wind_speed);
-            return std::format("{} {}", realtime_weather.wind_direction, wind_strength);
+            return std::format("{} {}", wind_direction, wind_strength);
+        } else if (item == WeatherItem::UV_INDEX) {
+            return realtime_weather.uv_index;
+        } else if (item == WeatherItem::PRECIPITATION) {
+            auto precipitation_text = utils::get_precipitation_text(realtime_weather.precipitation_type);
+            if (!realtime_weather.precipitation_intensity.empty()) {
+                return std::format("{} {}", precipitation_text, realtime_weather.precipitation_intensity);
+            }
+            return std::string{ precipitation_text };
         } else if (item == WeatherItem::AIR_QUALITY) {
             if (!realtime_air_quality.indexes.empty()) {
                 const auto &aqi = realtime_air_quality.indexes.back();

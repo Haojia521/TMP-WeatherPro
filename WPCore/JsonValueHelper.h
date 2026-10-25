@@ -14,6 +14,15 @@ namespace jvh
         return {};
     }
 
+    inline std::string_view getStringView(yyjson_val *j_val, const char *key) {
+        if (const auto *s = yyjson_get_str(yyjson_obj_get(j_val, key));
+            s != nullptr) {
+            return std::string_view{ s };
+        }
+
+        return {};
+    }
+
     inline int getInt(yyjson_val *j_val, const char *key) {
         return yyjson_get_int(yyjson_obj_get(j_val, key));
     }

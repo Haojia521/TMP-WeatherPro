@@ -24,6 +24,21 @@ namespace utils
             out += ']';
             return out;
         }
+
+        std::string_view lookupTextByCode(const std::unordered_map<std::string_view, tr::TID> &code_tid_map,
+                                          const std::string_view code,
+                                          const std::string_view func_name) {
+            std::string lower_code{ code };
+            std::ranges::transform(code, std::begin(lower_code),
+                                   [](const unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+            if (code_tid_map.contains(lower_code)) {
+                return tr::txt(code_tid_map.at(lower_code));
+            }
+
+            spdlog::error("Unkown code of {}: {}", func_name, code);
+            return "???";
+        }
     }
 
     int internetGet(const std::string &host, const std::string &path, std::string &content,
@@ -210,5 +225,43 @@ namespace utils
             result.append(parts[i]);
         }
         return result;
+    }
+
+    std::string_view get_direction_text(const std::string_view compass_code) {
+        static const std::unordered_map<std::string_view, tr::TID> code_tid_map{
+            {"n", tr::TID::FMT_DIRECTION_N,},
+            {"nne", tr::TID::FMT_DIRECTION_NNE,},
+            {"ne", tr::TID::FMT_DIRECTION_NE,},
+            {"ene", tr::TID::FMT_DIRECTION_ENE,},
+            {"e", tr::TID::FMT_DIRECTION_E,},
+            {"ese", tr::TID::FMT_DIRECTION_ESE,},
+            {"se", tr::TID::FMT_DIRECTION_SE,},
+            {"sse", tr::TID::FMT_DIRECTION_SSE,},
+            {"s", tr::TID::FMT_DIRECTION_S,},
+            {"ssw", tr::TID::FMT_DIRECTION_SSW,},
+            {"sw", tr::TID::FMT_DIRECTION_SW,},
+            {"wsw", tr::TID::FMT_DIRECTION_WSW,},
+            {"w", tr::TID::FMT_DIRECTION_W,},
+            {"wnw", tr::TID::FMT_DIRECTION_WNW,},
+            {"nw", tr::TID::FMT_DIRECTION_NW,},
+            {"nnw", tr::TID::FMT_DIRECTION_NNW,},
+            {"none", tr::TID::FMT_DIRECTION_NONE,},
+            {"vrb", tr::TID::FMT_DIRECTION_VRB,},
+        };
+
+        return lookupTextByCode(code_tid_map, compass_code, "direction");
+    }
+
+    std::string_view get_precipitation_text(const std::string_view type_code) {
+        static const std::unordered_map<std::string_view, tr::TID> code_tid_map{
+            {"rain", tr::TID::FMT_PRECIPITATION_RAIN},
+            {"snow", tr::TID::FMT_PRECIPITATION_SNOW},
+            {"ice", tr::TID::FMT_PRECIPITATION_ICE},
+            {"mixed", tr::TID::FMT_PRECIPITATION_MIXED},
+            {"none", tr::TID::FMT_PRECIPITATION_NONE},
+            {"unknown", tr::TID::FMT_PRECIPITATION_UNKNOWN},
+        };
+
+        return lookupTextByCode(code_tid_map, type_code, "precipitation");
     }
 }
