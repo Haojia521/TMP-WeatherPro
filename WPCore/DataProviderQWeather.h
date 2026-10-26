@@ -33,6 +33,10 @@ public:
         bool show_realtime_pm10{ false };
         bool show_forecasted_uv_index{ false };
         bool show_forecasted_humidity{ false };
+        bool show_forecasted_wind{ false };
+        bool show_forecasted_wind_scale{ true };
+        bool show_forecasted_precipitation{ false };
+        bool show_forecasted_day_night_details{ false };
 
         bool operator==(const ConfigFormatting&) const = default;
     };
@@ -56,14 +60,26 @@ public:
 
     struct ForecastedWeather
     {
+        struct DataBlock
+        {
+            std::string weather_text;
+            std::string weather_code;
+            std::string temp_max;
+            std::string temp_min;
+            std::string humidity;
+            std::string wind_direction;
+            std::string wind_speed;
+            std::string wind_scale;
+            std::string precipitation_amount;
+            std::string precipitation_type;
+            std::string precipitation_prob;
+        };
+
         std::string temp_max;
         std::string temp_min;
-        std::string weather_day;
-        std::string weather_night;
-        std::string code_day;
-        std::string code_night;
         std::string uv_index;
-        std::string humidity;
+        DataBlock day_time;
+        DataBlock night_time;
     };
 
     struct AirQualityIndex

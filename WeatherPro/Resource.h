@@ -149,9 +149,16 @@
 #define IDC_CHECK_MAIN_ITEM_SCROLL_TEXT 1069
 #define IDC_CHECK1                      1070
 #define IDC_CHECK_SHOW_GEO_COORDS_IN_SUMMARY 1070
+#define IDC_CHECK_FC_SHOW_WIND          1070
 #define IDC_CHECK2                      1071
 #define IDC_CHECK_DUAL_LINE_MODE        1071
+#define IDC_CHECK_FC_USE_WIND_SCALE     1071
 #define IDC_PROGRESS_X                  1072
+#define IDC_CHECK_FC_SHOW_PRECIPITATION 1074
+#define IDC_CHECK_FC_SHOW_DN_DETAILS    1075
+#define IDC_CHECK_SHOW_UVI              1076
+#define IDC_CHECK6                      1077
+#define IDC_CHECK_SHOW_PRECIPITATION    1077
 
 // Next default values for new objects
 // 
@@ -159,7 +166,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        1039
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1074
+#define _APS_NEXT_CONTROL_VALUE         1078
 #define _APS_NEXT_SYMED_VALUE           1000
 #endif
 #endif

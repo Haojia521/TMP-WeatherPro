@@ -17,6 +17,10 @@ namespace
     constexpr std::wstring_view WSV_ICON_STYLE{ L"icon_style" };
     constexpr std::wstring_view WSV_SHOW_FC_UVI{ L"show_forecasted_uv_index" };
     constexpr std::wstring_view WSV_SHOW_FC_HUM{ L"show_forecasted_humidity" };
+    constexpr std::wstring_view WSV_SHOW_FC_WIND{ L"show_forecasted_wind" };
+    constexpr std::wstring_view WSV_SHOW_FC_WIND_SCALE{ L"show_forecasted_wind_scale" };
+    constexpr std::wstring_view WSV_SHOW_FC_PRECIPITATOPN{ L"show_forecasted_precipitation" };
+    constexpr std::wstring_view WSV_SHOW_FC_DN_DETAILS{ L"show_forecasted_day_night_details" };
     constexpr std::wstring_view WSV_SHOW_RT_HUM{ L"show_realtime_humidity" };
     constexpr std::wstring_view WSV_SHOW_RT_PM2P5{ L"show_realtime_pm2p5" };
     constexpr std::wstring_view WSV_SHOW_RT_PM10{ L"show_realtime_pm10" };
@@ -108,6 +112,10 @@ void WapiQWeather::LoadConfig(const CSimpleIniW &ini_file) {
     provider_.config_fmt.show_realtime_pm10 = ini_helper.GetBool(WSV_SHOW_RT_PM10);
     provider_.config_fmt.show_forecasted_uv_index = ini_helper.GetBool(WSV_SHOW_FC_UVI);
     provider_.config_fmt.show_forecasted_humidity = ini_helper.GetBool(WSV_SHOW_FC_HUM);
+    provider_.config_fmt.show_forecasted_wind = ini_helper.GetBool(WSV_SHOW_FC_WIND);
+    provider_.config_fmt.show_forecasted_wind_scale = ini_helper.GetBool(WSV_SHOW_FC_WIND_SCALE, true);
+    provider_.config_fmt.show_forecasted_precipitation = ini_helper.GetBool(WSV_SHOW_FC_PRECIPITATOPN);
+    provider_.config_fmt.show_forecasted_day_night_details = ini_helper.GetBool(WSV_SHOW_FC_DN_DETAILS);
 }
 
 void WapiQWeather::SaveConfig(CSimpleIniW &ini) const {
@@ -131,4 +139,8 @@ void WapiQWeather::SaveConfig(CSimpleIniW &ini) const {
     ini_helper.SetBool(WSV_SHOW_RT_PM10, provider_.config_fmt.show_realtime_pm10);
     ini_helper.SetBool(WSV_SHOW_FC_UVI, provider_.config_fmt.show_forecasted_uv_index);
     ini_helper.SetBool(WSV_SHOW_FC_HUM, provider_.config_fmt.show_forecasted_humidity);
+    ini_helper.SetBool(WSV_SHOW_FC_WIND, provider_.config_fmt.show_forecasted_wind);
+    ini_helper.SetBool(WSV_SHOW_FC_WIND_SCALE, provider_.config_fmt.show_forecasted_wind_scale);
+    ini_helper.SetBool(WSV_SHOW_FC_PRECIPITATOPN, provider_.config_fmt.show_forecasted_precipitation);
+    ini_helper.SetBool(WSV_SHOW_FC_DN_DETAILS, provider_.config_fmt.show_forecasted_day_night_details);
 }

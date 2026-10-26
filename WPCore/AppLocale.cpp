@@ -22,10 +22,10 @@ namespace
             {.tid = TID::LC_QWEATHER, .text = "zh-hans"},
 
             {.tid = TID::FMT_AIR_QUALITY, .text = "空气质量"},
-            {.tid = TID::FMT_DAT_AFTER_TOMORROW, .text = "后日"},
+            {.tid = TID::FMT_DAT_AFTER_TOMORROW, .text = "后天"},
             {.tid = TID::FMT_HUMIDITY, .text = "湿度"},
-            {.tid = TID::FMT_TODAY, .text = "今日"},
-            {.tid = TID::FMT_TOMORROW, .text = "明日"},
+            {.tid = TID::FMT_TODAY, .text = "今天"},
+            {.tid = TID::FMT_TOMORROW, .text = "明天"},
             {.tid = TID::FMT_UVI, .text = "UV指数"},
 
             {.tid = TID::FMT_TMP_WIND, .text = "{}"},
@@ -51,6 +51,7 @@ namespace
             {.tid = TID::FMT_DIRECTION_NONE, .text = "无持续方向"},
             {.tid = TID::FMT_DIRECTION_VRB, .text = "方向变化不定"},
 
+            {.tid = TID::FMT_PRECIPITATION, .text = "降水"},
             {.tid = TID::FMT_PRECIPITATION_INTENSITY, .text = "降水强度"},
             {.tid = TID::FMT_PRECIPITATION_IN_1H, .text = "累计1小时降水量"},
             {.tid = TID::FMT_PRECIPITATION_RAIN, .text = "雨"},
@@ -59,6 +60,9 @@ namespace
             {.tid = TID::FMT_PRECIPITATION_MIXED, .text = "混合"},
             {.tid = TID::FMT_PRECIPITATION_NONE, .text = "无"},
             {.tid = TID::FMT_PRECIPITATION_UNKNOWN, .text = "未知"},
+
+            {.tid = TID::FMT_DAY_TIME, .text = "日"},
+            {.tid = TID::FMT_NIGHT_TIME, .text = "夜"},
 
             {.tid = TID::ERR_AUTH_NO_API_HOST, .text = "缺失API host"},
             {.tid = TID::ERR_AUTH_NO_APP_KEY, .text = "缺失API key"},
@@ -117,6 +121,7 @@ namespace
             {.tid = TID::FMT_DIRECTION_NONE, .text = "NONE"},
             {.tid = TID::FMT_DIRECTION_VRB, .text = "VRB"},
 
+            {.tid = TID::FMT_PRECIPITATION, .text = "Precipitation"},
             {.tid = TID::FMT_PRECIPITATION_INTENSITY, .text = "Precipitation intensity"},
             {.tid = TID::FMT_PRECIPITATION_IN_1H, .text = "Precipitation amount in 1 hour"},
             {.tid = TID::FMT_PRECIPITATION_RAIN, .text = "Rain"},
@@ -125,6 +130,9 @@ namespace
             {.tid = TID::FMT_PRECIPITATION_MIXED, .text = "Mixed"},
             {.tid = TID::FMT_PRECIPITATION_NONE, .text = "None"},
             {.tid = TID::FMT_PRECIPITATION_UNKNOWN, .text = "Unkown"},
+
+            {.tid = TID::FMT_DAY_TIME, .text = "Day"},
+            {.tid = TID::FMT_NIGHT_TIME, .text = "Night"},
 
             {.tid = TID::ERR_AUTH_NO_API_HOST, .text = "No API host"},
             {.tid = TID::ERR_AUTH_NO_APP_KEY, .text = "No API key"},
