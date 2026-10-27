@@ -54,10 +54,12 @@ namespace
 
         try {
             auto token = jwt::create()
+                .set_algorithm("EdDSA")
+                .set_key_id(cfg.credential_id)
+                .set_issuer(cfg.developer_id)
+                .set_subject(cfg.project_id)
                 .set_issued_at(now - JWT_TIME_OFFSET)
                 .set_expires_at(now + JWT_TIME_DURATION)
-                .set_subject(cfg.project_id)
-                .set_header_claim("kid", jwt::claim(cfg.credential_id))
                 .sign(jwt::algorithm::ed25519("", private_key));
 
             timestamp = now;
@@ -78,14 +80,6 @@ namespace
         auto detail = jvh::getString(j_err, "detail");
 
         return std::format("[{}] {} ({})", status, title, detail);
-    }
-
-    std::string timestamp_string_hhmm(std::int64_t sec) {
-        using namespace std::chrono;
-
-        const auto tp = sys_seconds{ seconds{sec} };
-        const auto day_time = tp - floor<days>(tp);
-        return std::format("{:%R}", hh_mm_ss{ day_time });
     }
 
     std::string timestamp_string_yyyymmdd_hhmm(std::int64_t sec) {
@@ -120,7 +114,6 @@ namespace
     }
 
     using ConfigApp = DataProviderQWeather::ConfigApp;
-    using ConfigFormatting = DataProviderQWeather::ConfigFormatting;
     using RealtimeWeather = DataProviderQWeather::RealtimeWeather;
     using ForecastedWeather = DataProviderQWeather::ForecastedWeather;
     using AirQualityIndex = DataProviderQWeather::AirQualityIndex;
@@ -752,6 +745,11 @@ bool DataProviderQWeather::validateApiAuthentication() const
     }
 
     if (config_app.enable_jwt) {
+        if (config_app.developer_id.empty()) {
+            spdlog::error(tr::txt(tr::TID::ERR_AUTH_JWT_NO_DEV_ID));
+            return false;
+        }
+
         if (config_app.project_id.empty()) {
             spdlog::error(tr::txt(tr::TID::ERR_AUTH_JWT_NO_PROJ_ID));
             return false;

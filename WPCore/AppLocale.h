@@ -60,6 +60,7 @@ namespace tr
 
         ERR_AUTH_NO_API_HOST,
         ERR_AUTH_NO_APP_KEY,
+        ERR_AUTH_JWT_NO_DEV_ID,
         ERR_AUTH_JWT_NO_PROJ_ID,
         ERR_AUTH_JWT_NO_CRED_ID,
         ERR_CODE,

@@ -99,6 +99,7 @@ OptionsQwDlg::OptionsQwDlg(CWnd* pParent /*=nullptr*/)
 	, str_api_host(_T(""))
 	, str_app_key(_T(""))
 	, int_auth_mode(0)
+	, str_jwt_dev_id(_T(""))
 	, str_jwt_proj_id(_T(""))
 	, str_jwt_cred_id(_T(""))
 	, str_jwt_pub_key_filepath(_T(""))
@@ -150,6 +151,7 @@ void OptionsQwDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_FC_SHOW_WIND, bool_fc_show_wind);
 	DDX_Check(pDX, IDC_CHECK_FC_USE_WIND_SCALE, bool_fc_use_wind_scale);
 	DDX_Check(pDX, IDC_CHECK_FC_SHOW_PRECIPITATION, bool_fc_show_precipitation);
+	DDX_Text(pDX, IDC_EDIT_JWT_DEV_ID, str_jwt_dev_id);
 }
 
 
@@ -161,11 +163,12 @@ BEGIN_MESSAGE_MAP(OptionsQwDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_COPY_PUB_KEY, &OptionsQwDlg::OnBnClickedButtonCopyPubKey)
 END_MESSAGE_MAP()
 
-void OptionsQwDlg::SetControlAvailabilityByAuthMode() {
+void OptionsQwDlg::SetControlAvailabilityByAuthMode() const {
 	const bool jwt_enabled = int_auth_mode == 1;
 
 	GetDlgItem(IDC_EDIT_APP_KEY)->EnableWindow(!jwt_enabled);
 
+	GetDlgItem(IDC_EDIT_JWT_DEV_ID)->EnableWindow(jwt_enabled);
 	GetDlgItem(IDC_EDIT_JWT_PROJ_ID)->EnableWindow(jwt_enabled);
 	GetDlgItem(IDC_EDIT_JWT_CRED_ID)->EnableWindow(jwt_enabled);
 	GetDlgItem(IDC_STATIC_JWT_PUB_KEY_FILEPATH)->EnableWindow(jwt_enabled);
@@ -193,6 +196,7 @@ BOOL OptionsQwDlg::OnInitDialog()
 	str_api_host = cmn::MultiByte2WideChar(cfg_app.api_host).c_str();
 	str_app_key = cmn::MultiByte2WideChar(cfg_app.app_key).c_str();
 	
+	str_jwt_dev_id = cmn::MultiByte2WideChar(cfg_app.developer_id).c_str();
 	str_jwt_proj_id = cmn::MultiByte2WideChar(cfg_app.project_id).c_str();
 	str_jwt_cred_id = cmn::MultiByte2WideChar(cfg_app.credential_id).c_str();
 	str_jwt_pub_key_filepath = cmn::MultiByte2WideChar(cfg_app.jwt_pub_key_file).c_str();
@@ -235,9 +239,10 @@ void OptionsQwDlg::OnOK()
 		.icon_style = static_cast<WapiQWeather::IconStyle>(ctrl_combobox_icon_style.GetCurSel()),
 	};
 
-	DataProviderQWeather::ConfigApp cfg_app{
+	const DataProviderQWeather::ConfigApp cfg_app{
 		.app_key = cmn::WideChar2MultiByte(str_app_key),
 		.api_host = cmn::WideChar2MultiByte(str_api_host),
+		.developer_id = cmn::WideChar2MultiByte(str_jwt_dev_id),
 		.project_id = cmn::WideChar2MultiByte(str_jwt_proj_id),
 		.credential_id = cmn::WideChar2MultiByte(str_jwt_cred_id),
 		.jwt_pub_key_file = cmn::WideChar2MultiByte(str_jwt_pub_key_filepath),
@@ -245,7 +250,7 @@ void OptionsQwDlg::OnOK()
 		.enable_jwt = int_auth_mode == 1,
 	};
 
-	DataProviderQWeather::ConfigFormatting cfg_fmt{
+	const DataProviderQWeather::ConfigFormatting cfg_fmt{
 		.show_realtime_temp_feels_like = bool_show_temp_feels_like == TRUE,
 		.show_realtime_wind = bool_rt_show_wind == TRUE,
 		.show_realtime_wind_scale = bool_rt_use_wind_scale == TRUE,
@@ -262,8 +267,8 @@ void OptionsQwDlg::OnOK()
 		.show_forecasted_day_night_details = bool_fc_show_day_night_details == TRUE,
 	};
 
-	auto changed_auth_config = cfg_app != api.GetProviderQWeather().config_app;
-	auto changed_fmt_config =  cfg_fmt != api.GetProviderQWeather().config_fmt;
+	const auto changed_auth_config = cfg_app != api.GetProviderQWeather().config_app;
+	const auto changed_fmt_config =  cfg_fmt != api.GetProviderQWeather().config_fmt;
 
 	api.config = cfg_gui;
 	api.GetProviderQWeather().config_app = cfg_app;
@@ -289,7 +294,7 @@ void OptionsQwDlg::OnBnClickedRadioAuth()
 
 void OptionsQwDlg::OnBnClickedButtonCreateKeyPair()
 {
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
 	auto folder_path = SelectFolder(nullptr);
 	if (folder_path.IsEmpty()) {
@@ -342,7 +347,7 @@ void OptionsQwDlg::OnBnClickedButtonCreateKeyPair()
 
 void OptionsQwDlg::OnBnClickedButtonSelectKeyPair()
 {
-	AFX_MANAGE_STATE(AfxGetStaticModuleState());
+	AFX_MANAGE_STATE(AfxGetStaticModuleState())
 
 	auto folder_path = SelectFolder(nullptr);
 	if (folder_path.IsEmpty()) {

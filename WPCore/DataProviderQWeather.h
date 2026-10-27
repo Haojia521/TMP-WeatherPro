@@ -12,6 +12,7 @@ public:
     {
         std::string app_key;
         std::string api_host;
+        std::string developer_id;
         std::string project_id;
         std::string credential_id;
         std::string jwt_pub_key_file;

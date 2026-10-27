@@ -66,6 +66,7 @@ namespace
 
             {.tid = TID::ERR_AUTH_NO_API_HOST, .text = "缺失API host"},
             {.tid = TID::ERR_AUTH_NO_APP_KEY, .text = "缺失API key"},
+            {.tid = TID::ERR_AUTH_JWT_NO_DEV_ID, .text = "缺失开发者ID"},
             {.tid = TID::ERR_AUTH_JWT_NO_PROJ_ID, .text = "缺失项目ID"},
             {.tid = TID::ERR_AUTH_JWT_NO_CRED_ID, .text = "缺失JWT凭据ID"},
             {.tid = TID::ERR_CODE, .text = "错误代码"},
@@ -136,6 +137,7 @@ namespace
 
             {.tid = TID::ERR_AUTH_NO_API_HOST, .text = "No API host"},
             {.tid = TID::ERR_AUTH_NO_APP_KEY, .text = "No API key"},
+            {.tid = TID::ERR_AUTH_JWT_NO_DEV_ID, .text = "No developer ID"},
             {.tid = TID::ERR_AUTH_JWT_NO_PROJ_ID, .text = "No project ID"},
             {.tid = TID::ERR_AUTH_JWT_NO_CRED_ID, .text = "No JWT credential ID"},
             {.tid = TID::ERR_CODE, .text = "Error code"},
