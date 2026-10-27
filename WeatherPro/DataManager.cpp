@@ -162,10 +162,13 @@ namespace
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// 自动定位
     bool AutoLocating(LocationSource source, const DataProvider &data_provider, Location &loc) {
+        SPDLOG_DEBUG("auto-locating starts");
+
         loc = {};
 
         // 1. 通过 provider 获取位置
         if (HasFlag(source, LocationSource::ApiProvided) && data_provider.autoLocating(loc)) {
+            SPDLOG_DEBUG("use the location provided by api");
             return true;
         }
 
@@ -197,31 +200,41 @@ namespace
                 assign_first_location(locations);
         };
 
-        double longitude = 0.0;
-        double latitude = 0.0;
-        std::string loc_name;
+        double longitude{ 0.0 };
+        double latitude{ 0.0 };
 
         // 2. 通过系统获取经纬度
         if (HasFlag(source, LocationSource::OsGeolocation) && cmn::GetSystemLocation(longitude, latitude)) {
+            SPDLOG_DEBUG("got geo-coordinates from system: longitude={:.2f}, latitude={:.2f}", longitude, latitude);
             if (try_reverse_geocoding(latitude, longitude)) {
+                SPDLOG_DEBUG("got a location by reverse geocoding from api: name={}, longitude={}, latitude={}",
+                             loc.name, loc.longitude, loc.latitude);
                 return true;
             }
+            SPDLOG_DEBUG("no location returned by reverse geocoding");
         }
 
         // 3. 通过 IP 获取经纬度和地名
-        if ((HasFlag(source, LocationSource::IpGeolocation) || HasFlag(source, LocationSource::IpRegionName)) &&
+        if (std::string loc_name; 
+            (HasFlag(source, LocationSource::IpGeolocation) || HasFlag(source, LocationSource::IpRegionName)) &&
             cmn::GetIpLocation(longitude, latitude, loc_name)) {
+            SPDLOG_DEBUG("got name and geo-coordinates by ip: name={}, longitude={:.2f}, latitude={:.2f}, ", loc_name, longitude, latitude);
             if (HasFlag(source, LocationSource::IpGeolocation) && 
                 try_reverse_geocoding(latitude, longitude)) {
+                SPDLOG_DEBUG("got a location by reverse geocoding from api: name={}, longitude={}, latitude={}",
+                             loc.name, loc.longitude, loc.latitude);
                 return true;
             }
 
             if (HasFlag(source, LocationSource::IpRegionName) && 
                 try_direct_geocoding(loc_name)) {
+                SPDLOG_DEBUG("got a location by direct geocoding from api: name={}, longitude={}, latitude={}",
+                             loc.name, loc.longitude, loc.latitude);
                 return true;
             }
         }
 
+        SPDLOG_DEBUG("all attempts for auto-locating are failed");
         return false;
     }
 
@@ -434,6 +447,9 @@ void DataManager::ProceedUpdate() {
     
     if (Location loc; 
         config_.auto_locating && AutoLocating(config_.auto_locating_src, data_provider, loc)) {
+        spdlog::info("successfully located at the position: name={}, lon={}, lat={}, adm={}",
+                     loc.name, loc.longitude, loc.latitude,loc.administrative_ownership);
+
         current_loc_ = loc;
 
         // disable auto-locating if locating-once option is set
