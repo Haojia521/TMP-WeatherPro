@@ -39,6 +39,16 @@ namespace utils
             spdlog::error("Unkown code of {}: {}", func_name, code);
             return "???";
         }
+
+        std::string_view sanitizeHost(std::string_view host) {
+            constexpr std::string_view sanitized_host_qweather{ "***.qweatherapi.com" };
+
+            if (host.find("qweatherapi.com") != std::string_view::npos) {
+                return sanitized_host_qweather;
+            }
+
+            return host;
+        }
     }
 
     int internetGet(const std::string &host, const std::string &path, std::string &content,
@@ -49,7 +59,7 @@ namespace utils
         content.clear();
 
         SPDLOG_DEBUG("internetGet: host={}, path={}, params={}, headers={}",
-                     host, path, joinMapKeys(params.data), joinMapKeys(headers.data));
+                     sanitizeHost(host), path, joinMapKeys(params.data), joinMapKeys(headers.data));
 
         httplib::Client clt(host);
         clt.set_connection_timeout(5s);
@@ -76,7 +86,7 @@ namespace utils
         spdlog::error("internetGet failed: {}. host={}, path={}, params={}, headers={}, "
                       "ssl_error={}, ssl_backend_error=0x{:X}",
                       httplib::to_string(res.error()),
-                      host,
+                      sanitizeHost(host),
                       path,
                       joinMapKeys(params.data),
                       joinMapKeys(headers.data),
