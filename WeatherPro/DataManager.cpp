@@ -162,7 +162,7 @@ namespace
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// 自动定位
     bool AutoLocating(LocationSource source, const DataProvider &data_provider, Location &loc) {
-        SPDLOG_DEBUG("auto-locating starts");
+        SPDLOG_DEBUG("auto-locating process starts");
 
         loc = {};
 

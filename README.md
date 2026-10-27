@@ -13,7 +13,7 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
 - 支持多种天气接口 （配置方法请参考[接口说明](docs/DataSourceGuide.md)）
   - 天气网 (weather.com.cn)
   - 和风天气 (qweather.com)
-  - OpenWeather (openweathermap.org)
+  - OpenWeather (openweathermap.org) *(现已支持Onecall 4.0)*
 - 支持在横置任务栏占用两行显示天气信息
 - 支持设置数据常驻显示区
 - 支持在固定宽度的主窗口区滚动显示长文本
@@ -21,16 +21,14 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
 
 ## 版本更新
 
-**v1.3.0**
+- v1.4.0
 
-- [新增] 在插件右键菜单中添加了常用命令
-- [优化] 适配OpenWeather OneCall 4.0接口
-- [优化] 改进了部分日志信息
-
-**v1.3.1**
-
-- [修复] 修正了OpenWeather OneCall数据单位显示错误
-
+  - [新增] 设置界面添加仅执行一次自动定位的选项
+  - [优化] 适配和风天气最新 **实时天气** 接口，新增了紫外线指数、降水数据
+  - [优化] 适配和风天气最新 **每日天气预报** 接口, 可区分日间/夜间详细预报，新增风力、降水数据
+  - [优化] 增加插件ICON图标，改进部分日志信息
+  - [修复] 适配和风天气最新JWT身份验证规则，需填写 **开发者ID**，具体请参考[配置说明](docs/DataSourceGuide.md#232-jwt)
+ 
 [查看历史更新](#历史更新)
 
 ## 程序界面介绍
@@ -47,11 +45,17 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
 
   v1.0版本支持设置常驻信息显示区，按选定的时间段与数据项目显示数据。修改常驻显示区配置后需要重启TrafficMonitor使配置生效。
 
+  > 修改常驻项的标签文本方法：打开TrafficMonitor「选项设置」窗口，进入「任务栏窗口设置」页，在「显示设置」区域，点击「显示文本设置」按钮，打开「显示文本设置」窗口即可修改
+
+  > 注意：接口可能缺失特定数据，显示「--」
+
   ![常驻显示区](images/taskbar-wnd-pinned-items.png)
 
 - 鼠标提示弹窗
 
   ![提示弹窗](images/tooltip-info.png)
+
+  > 上图为使用和风天气接口的数据内容。具体显示项目可在API选项窗口配置。
 
 - 设置界面
 
@@ -96,6 +100,13 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
 请参考[构建说明文档](docs/Build.md)。
 
 ## 历史更新
+
+- v1.3.0/1.3.1
+
+  - [新增] 在插件右键菜单中添加了常用命令
+  - [优化] 适配OpenWeather OneCall 4.0接口
+  - [优化] 改进了部分日志信息
+  - [修复] 修正了OpenWeather OneCall数据单位显示错误
 
 - v1.2.0
 
