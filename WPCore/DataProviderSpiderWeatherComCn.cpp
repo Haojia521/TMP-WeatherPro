@@ -640,6 +640,8 @@ bool DataProviderSpiderWeatherComCn::autoLocating(Location &loc) const {
 }
 
 bool DataProviderSpiderWeatherComCn::geocodingDirect(const std::string &query, Locations &queried_locations) const {
+    spdlog::info("weathercomcn api: query locations by direct geocoding");
+
     if (queryLocations(query, queried_locations)) {
         if (queried_locations.empty()) {
             // if query is succeeded but reault is empty, split query by space and try again
@@ -665,11 +667,15 @@ bool DataProviderSpiderWeatherComCn::geocodingDirect(const std::string &query, L
 
 bool DataProviderSpiderWeatherComCn::geocodingReverse(const std::string &latitude, const std::string &longitude,
                                                       Locations &queried_locations) const {
+    spdlog::info("weathercomcn api: query locations by reverse geocoding (no effect)");
+
     queried_locations.clear();
     return false;
 }
 
 WeatherDataCPtr DataProviderSpiderWeatherComCn::getWeatherData(const Location &loc) const {
+    spdlog::info("weathercomcn api: fetch weather data");
+
     if (loc.id.empty()) {
         spdlog::error("No location id");
         return nullptr;

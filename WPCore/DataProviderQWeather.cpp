@@ -770,7 +770,14 @@ bool DataProviderQWeather::validateApiAuthentication() const
 }
 
 WeatherDataCPtr DataProviderQWeather::getWeatherData(const Location &loc) const {
+    spdlog::info("qweather api: fetch weather data");
+
     if (!validateApiAuthentication()) {
+        return nullptr;
+    }
+
+    if (loc.longitude.empty() || loc.latitude.empty()) {
+        spdlog::error(tr::txt(tr::TID::ERR_NO_LONG_LAT));
         return nullptr;
     }
 
@@ -800,6 +807,8 @@ WeatherDataCPtr DataProviderQWeather::getWeatherData(const Location &loc) const 
 }
 
 bool DataProviderQWeather::geocodingDirect(const std::string &query, Locations &queried_locations) const {
+    spdlog::info("qweather api: query locations by direct geocoding");
+
     if (!validateApiAuthentication()) {
         return false;
     }
@@ -809,6 +818,8 @@ bool DataProviderQWeather::geocodingDirect(const std::string &query, Locations &
 
 bool DataProviderQWeather::geocodingReverse(const std::string &latitude, const std::string &longitude,
                                             Locations &queried_locations) const {
+    spdlog::info("qweather api: query locations by reverse geocoding");
+
     if (!validateApiAuthentication()) {
         return false;
     }

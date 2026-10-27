@@ -4,6 +4,7 @@
 
 // TextViewerDlg 对话框
 #define WM_SET_EDIT_CURSOR_BEGIN (WM_USER + 100)
+#define WM_SET_EDIT_CURSOR_END (WM_USER + 101)
 
 class TextViewerDlg : public CDialogEx
 {
@@ -20,6 +21,7 @@ public:
 
 protected:
 	afx_msg LRESULT OnSetEditCursorBegin(WPARAM, LPARAM);
+	afx_msg LRESULT OnSetEditCursorEnd(WPARAM, LPARAM);
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 	DECLARE_MESSAGE_MAP()
@@ -29,6 +31,9 @@ protected:
 public:
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
 	virtual BOOL OnInitDialog();
+
+	bool set_edit_cursor_at_end{ false };
+
 	CString str_title;
 	CString str_text_content;
 };

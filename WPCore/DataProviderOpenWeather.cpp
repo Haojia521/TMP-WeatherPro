@@ -683,6 +683,8 @@ bool DataProviderOpenWeather::validateApiAuthentication() const {
 }
 
 bool DataProviderOpenWeather::geocodingDirect(const std::string &query, Locations &queried_locations) const {
+    spdlog::info("openweather api: query locations by direct geocoding");
+
     if (!validateApiAuthentication()) {
         return false;
     }
@@ -692,6 +694,8 @@ bool DataProviderOpenWeather::geocodingDirect(const std::string &query, Location
 
 bool DataProviderOpenWeather::geocodingReverse(const std::string &latitude, const std::string &longitude,
                                                Locations &queried_locations) const {
+    spdlog::info("openweather api: query locations by reverse geocoding");
+
     if (!validateApiAuthentication()) {
         return false;
     }
@@ -700,6 +704,8 @@ bool DataProviderOpenWeather::geocodingReverse(const std::string &latitude, cons
 }
 
 WeatherDataCPtr DataProviderOpenWeather::getWeatherData(const Location &loc) const {
+    spdlog::info("openweather api: fetch weather data");
+
     if (!validateApiAuthentication()) {
         return nullptr;
     }

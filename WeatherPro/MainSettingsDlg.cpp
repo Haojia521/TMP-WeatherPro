@@ -243,6 +243,7 @@ void MainSettingsDlg::OnBnClickedButtonCheckErrorMsg()
 	}
 
 	dlg.str_text_content = woss.str().c_str();
+	dlg.set_edit_cursor_at_end = true;
 	dlg.DoModal();
 }
 

@@ -34,6 +34,7 @@ void TextViewerDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(TextViewerDlg, CDialogEx)
 	ON_WM_GETMINMAXINFO()
 	ON_MESSAGE(WM_SET_EDIT_CURSOR_BEGIN, &TextViewerDlg::OnSetEditCursorBegin)
+    ON_MESSAGE(WM_SET_EDIT_CURSOR_END, &TextViewerDlg::OnSetEditCursorEnd)
 END_MESSAGE_MAP()
 
 
@@ -51,7 +52,11 @@ BOOL TextViewerDlg::OnInitDialog()
 	GetWindowRect(&rect);
 	min_window_size = rect.Size();
 
-	PostMessage(WM_SET_EDIT_CURSOR_BEGIN);
+	if (set_edit_cursor_at_end) {
+		PostMessage(WM_SET_EDIT_CURSOR_END);
+	}else {
+	    PostMessage(WM_SET_EDIT_CURSOR_BEGIN);
+	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
@@ -72,6 +77,14 @@ LRESULT TextViewerDlg::OnSetEditCursorBegin(WPARAM, LPARAM)
 {
 	ctrl_edit_text_content.SetFocus();
 	ctrl_edit_text_content.SetSel(0, 0);
+
+	return 0;
+}
+
+LRESULT TextViewerDlg::OnSetEditCursorEnd(WPARAM, LPARAM) {
+	ctrl_edit_text_content.SetFocus();
+	ctrl_edit_text_content.SetSel(-1, -1);
+	ctrl_edit_text_content.LineScroll(ctrl_edit_text_content.GetLineCount());
 
 	return 0;
 }
