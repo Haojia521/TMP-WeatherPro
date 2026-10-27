@@ -280,6 +280,7 @@
     <Image Include="res\qw-hollow-ms.png" />
     <Image Include="res\update-weather.ico" />
     <Image Include="res\wcc-ms.png" />
+    <Image Include="res\WeatherPro.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

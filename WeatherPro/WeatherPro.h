@@ -49,6 +49,8 @@ public:
 	void OnInitialize(ITrafficMonitor *pApp) override;
 	void OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) override;
 
+	void* GetPluginIcon() override;
+
 	int GetCommandCount() override;
 	const wchar_t* GetCommandName(int command_index) override;
 	void* GetCommandIcon(int command_index) override;

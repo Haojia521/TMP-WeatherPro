@@ -513,6 +513,10 @@ void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
     }
 }
 
+void* WeatherPro::GetPluginIcon() {
+    return IconManager::Instance().GetIcon(IDI_ICON_LOGO);
+}
+
 int WeatherPro::GetCommandCount() {
     return static_cast<int>(tm_commands.size());
 }

@@ -102,6 +102,8 @@
 #define IDI_ICON_UPDATE_WEATHER         1038
 #define IDC_CHECK_FC_SHOW_HUM           1039
 #define IDS_WI_HUMIDITY                 1039
+#define IDI_ICON1                       1039
+#define IDI_ICON_LOGO                   1039
 #define IDC_CHECK_FC_SHOW_UVI           1040
 #define IDS_WI_WIND                     1040
 #define IDS_WI_AIR_QUALITY              1041
@@ -160,14 +162,13 @@
 #define IDC_CHECK6                      1077
 #define IDC_CHECK_SHOW_PRECIPITATION    1077
 #define IDC_EDIT_JWT_DEV_ID             1078
-#define IDC_CHECK3                      1079
 #define IDC_CHECK_LOCATING_ONCE         1079
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        1039
+#define _APS_NEXT_RESOURCE_VALUE        1040
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1080
 #define _APS_NEXT_SYMED_VALUE           1000
