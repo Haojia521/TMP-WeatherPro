@@ -436,6 +436,12 @@ void DataManager::ProceedUpdate() {
         config_.auto_locating && AutoLocating(config_.auto_locating_src, data_provider, loc)) {
         current_loc_ = loc;
 
+        // disable auto-locating if locating-once option is set
+        if (config_.flag_locating_once) {
+            config_.auto_locating = false;
+            config_.flag_locating_once = false;
+        }
+
         // save the location to config file
         SaveConfigs();
     }

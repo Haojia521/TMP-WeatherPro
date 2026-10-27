@@ -32,6 +32,7 @@ MainSettingsDlg::MainSettingsDlg(CWnd* pParent /*=nullptr*/)
 	, bool_main_item_scroll_text(FALSE)
 	, bool_show_geo_coords_in_summary(FALSE)
 	, bool_enable_dual_line_mode(FALSE)
+	, bool_locating_once(FALSE)
 	, int_ldc_action(0)
 	, str_current_location(_T(""))
 {
@@ -57,6 +58,7 @@ void MainSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_MAIN_ITEM_SCROLL_TEXT, bool_main_item_scroll_text);
 	DDX_Check(pDX, IDC_CHECK_SHOW_GEO_COORDS_IN_SUMMARY, bool_show_geo_coords_in_summary);
 	DDX_Check(pDX, IDC_CHECK_DUAL_LINE_MODE, bool_enable_dual_line_mode);
+	DDX_Check(pDX, IDC_CHECK_LOCATING_ONCE, bool_locating_once);
 }
 
 
@@ -104,6 +106,12 @@ BOOL MainSettingsDlg::OnInitDialog()
 
 	// initialze check box
 	bool_auto_locating = cfg.auto_locating ? TRUE : FALSE;
+	if (cfg.auto_locating) {
+		// The "locate once" option is only meaningful when auto-locating is enabled,
+        // so only set locating_once when auto_locating is true.
+		bool_locating_once = cfg.flag_locating_once ? TRUE : FALSE;
+	}
+
 	bool_show_info_in_tooltip = cfg.show_weather_in_tooltip ? TRUE : FALSE;
 	bool_draw_icon = cfg.draw_weather_icon ? TRUE : FALSE;
 	bool_draw_alerts_notification_dot = cfg.draw_alerts_notification_dot ? TRUE : FALSE;
@@ -141,6 +149,11 @@ DataManager::Config MainSettingsDlg::GetConfigsFromUI() {
 	cfg.update_interval = static_cast<DataManager::UpdateInterval>(ctrl_combobox_update_interval.GetCurSel());
 	cfg.double_click_action = static_cast<DataManager::LDoubleClickAction>(int_ldc_action);
 	cfg.auto_locating = bool_auto_locating == TRUE;
+	if (cfg.auto_locating) {
+		// The "locate once" option is only meaningful when auto-locating is enabled,
+		// so only set locating_once when auto_locating is true.
+		cfg.flag_locating_once = bool_locating_once == TRUE;
+	}
 	cfg.show_weather_in_tooltip = bool_show_info_in_tooltip == TRUE;
 	cfg.draw_weather_icon = bool_draw_icon == TRUE;
 	cfg.draw_alerts_notification_dot = bool_draw_alerts_notification_dot == TRUE;
@@ -159,11 +172,11 @@ void MainSettingsDlg::OnOK()
 	const auto &old_cfg = data_mgr.GetConfig();
 	const auto &old_loc = data_mgr.GetCurrentLocation();
 
-	auto cfg{ GetConfigsFromUI() };
+	const auto cfg{ GetConfigsFromUI() };
 
-	auto api_changed = cfg.api_type != old_cfg.api_type;
-	auto auto_locating_changed = cfg.auto_locating != old_cfg.auto_locating;
-	auto location_changed = current_location != old_loc;
+	const auto api_changed = cfg.api_type != old_cfg.api_type;
+	const auto require_locating = (cfg.auto_locating != old_cfg.auto_locating) && cfg.auto_locating;
+	const auto location_changed = current_location != old_loc;
 
 	if (location_changed) {
 		data_mgr.SetCurrentLocation(current_location);
@@ -172,7 +185,7 @@ void MainSettingsDlg::OnOK()
 	data_mgr.SetConfig(cfg);
 	data_mgr.SaveConfigs();
 
-	if (api_changed || auto_locating_changed || location_changed) {
+	if (api_changed || require_locating || location_changed) {
 		WeatherPro::Instance().UpdateWeather(true);
 	} else {
 		data_mgr.RefreshCache();
@@ -281,9 +294,13 @@ void MainSettingsDlg::OnBnClickedButtonUpdateManually()
 		loc != current_location) {
 		current_location = loc;
 		str_current_location = cmn::MultiByte2WideChar(loc.getFormattedString()).c_str();
-
-		UpdateData(FALSE);
 	}
+
+	// the auto-location option may be changed
+	bool_auto_locating = data_mgr.GetConfig().auto_locating ? TRUE : FALSE;
+	bool_locating_once = data_mgr.GetConfig().flag_locating_once ? TRUE : FALSE;
+    
+    UpdateData(FALSE);
 }
 
 void MainSettingsDlg::OnBnClickedButtonAutoLocOptions()
@@ -331,7 +348,7 @@ void MainSettingsDlg::OnBnClickedButtonVersion()
 	    CString msg;
 		msg.Format(msg_template, latest_pkg.version.to_wstring().c_str(), target_url.c_str());
 		if (MessageBoxW(msg, cmn::GetStringRes(IDS_NEW_VERSION_RELEASED), MB_OKCANCEL) == IDOK) {
-			ShellExecuteW(NULL, _T("open"), target_url.c_str(), NULL, NULL, SW_SHOW);
+			ShellExecuteW(nullptr, _T("open"), target_url.c_str(), nullptr, nullptr, SW_SHOW);
 		}
 	}
     else {

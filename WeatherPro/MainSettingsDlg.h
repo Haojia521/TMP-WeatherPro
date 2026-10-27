@@ -35,6 +35,7 @@ protected:
 	BOOL bool_main_item_scroll_text;
 	BOOL bool_show_geo_coords_in_summary;
 	BOOL bool_enable_dual_line_mode;
+	BOOL bool_locating_once;
 	int int_ldc_action;
 
 	Location current_location;
