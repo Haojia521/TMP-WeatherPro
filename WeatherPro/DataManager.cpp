@@ -48,6 +48,7 @@ namespace
     constexpr std::wstring_view WSV_MAIN_ITEM_SCROLL_TEXT{ L"main_item_scroll_text" };
     constexpr std::wstring_view WSV_FORMAT_GEO_COORDS_IN_SUMMARY{ L"format_geo_coords_in_summary" };
     constexpr std::wstring_view WSV_ENABLE_DUAL_LINE_MODE{ L"enable_dual_line_mode" };
+    constexpr std::wstring_view WSV_ENABLE_DUAL_LINE_MODE_ALWAYS{ L"enable_dual_line_mode_always" };
 
     template<typename ENM_T, typename STR_T>
     struct EnumStrMappingItem
@@ -365,6 +366,7 @@ void DataManager::LoadConfigs(std::wstring_view cfg_dir) {
     config_.main_item_scroll_text = ini_helper.GetBool(WSV_MAIN_ITEM_SCROLL_TEXT, true);
     config_.format_geo_coords_in_summary = ini_helper.GetBool(WSV_FORMAT_GEO_COORDS_IN_SUMMARY, true);
     config_.enable_dual_line_mode = ini_helper.GetBool(WSV_ENABLE_DUAL_LINE_MODE, true);
+    config_.enable_dual_line_mode_always = ini_helper.GetBool(WSV_ENABLE_DUAL_LINE_MODE_ALWAYS, false);
 
     config_.pinned_item_data_keys = ParsePinnedItemDataKeys(ini_helper.GetValueW(WSV_PINNED_ITEM_DATA_KEYS));
 
@@ -395,6 +397,7 @@ void DataManager::SaveConfigs() const {
     ini_helper.SetBool(WSV_MAIN_ITEM_SCROLL_TEXT, config_.main_item_scroll_text);
     ini_helper.SetBool(WSV_FORMAT_GEO_COORDS_IN_SUMMARY, config_.format_geo_coords_in_summary);
     ini_helper.SetBool(WSV_ENABLE_DUAL_LINE_MODE, config_.enable_dual_line_mode);
+    ini_helper.SetBool(WSV_ENABLE_DUAL_LINE_MODE_ALWAYS, config_.enable_dual_line_mode_always);
 
     ini_helper.SetValueW(WSV_PINNED_ITEM_DATA_KEYS, ToWString(config_.pinned_item_data_keys));
 

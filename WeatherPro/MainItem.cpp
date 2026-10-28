@@ -476,7 +476,13 @@ bool MainItem::IsCustomDraw() const {
 }
 
 int MainItem::GetItemWidth() const {
-    return dual_line_mode ? 80 : 60;
+    const bool dual_line_always =
+        DataManager::Instance().GetConfig().enable_dual_line_mode_always;
+    return (dual_line_mode || dual_line_always) ? 80 : 60;
+}
+
+int MainItem::IsDoubleLineExclusive() const {
+    return DataManager::Instance().GetConfig().enable_dual_line_mode_always ? 1 : 0;
 }
 
 int MainItem::GetItemWidthEx(void* hDC) const {
@@ -508,7 +514,12 @@ void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {
 
     const auto pixel_size_32 = CalcPixelSize(taskbar_wnd_dpi, 32);
 
-    dual_line_mode = cfg.enable_dual_line_mode && h >= pixel_size_32;
+    // 双行绘制以宿主实际分配的矩形高度为准：
+    // - enable_dual_line_mode（原功能）：主项目位于最后（奇数项）时宿主会分配双行高度
+    // - enable_dual_line_mode_always：通过 IsDoubleLineExclusive 告知 v8 宿主独占双行；
+    //   宿主不支持时不会分配双行高度，此时不能强制按双行绘制（否则内容挤压）
+    dual_line_mode = (cfg.enable_dual_line_mode || cfg.enable_dual_line_mode_always)
+                     && h >= pixel_size_32;
 
     const auto *snapshot_ptr = data_snapshot.get();
     auto model = BuildRenderModel(is_updating, dual_line_mode, snapshot_ptr, api, cfg);
