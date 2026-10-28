@@ -5,6 +5,8 @@
 **********************************************************/
 #pragma once
 
+class IPluginDrawer;
+
 //插件显示项目的接口
 class IPluginItem
 {
@@ -139,16 +141,34 @@ public:
     virtual void* OnItemInfo(ItemInfoType, void* para1, void* para2) { return 0; }
 
     /**
-     * @brief 是否在在任务栏中显示此项目的资源占用图
-     * @return 1：显示，0：不显示
+     * @brief   是否在在任务栏中显示此项目的资源占用图
+     * @return  1：显示，0：不显示
      */
     virtual int IsDrawResourceUsageGraph() const { return 0; }
 
     /**
-     * @brief 获取资源占用图的值。当IsDrawResourceUsageGraphType返回值不为0时有效
-     * @return float 资源占用图的值，范围为0.0~1.0。
+     * @brief   获取资源占用图的值。当IsDrawResourceUsageGraphType返回值不为0时有效
+     * @return  float 资源占用图的值，范围为0.0~1.0。
      */
     virtual float GetResourceUsageGraphValue() const { return 0.0; }
+
+    /**
+     * @brief   自定义绘制显示区域的函数，只有当CustomDraw()函数返回true时重写此函数才有效
+     * @param   IPluginDrawer* pDrawer 用于插件绘图接口的的指针
+     * @param   int x 绘图的矩形区域
+     * @param   int y
+     * @param   int w
+     * @param   int h
+     * @param   bool dark_mode 深色模式为true，浅色模式为false
+     * @return  bool
+     */
+    virtual bool DrawItemEx(IPluginDrawer* pDrawer, int x, int y, int w, int h, bool dark_mode) { return false; }
+
+    /**
+     * @brief   是否在任务中独占双行
+     * @return  1：是，0：否
+     */
+    virtual int IsDoubleLineExclusive() const { return 0; }
 };
 
 class ITrafficMonitor;
@@ -163,7 +183,7 @@ public:
      * @attention 插件开发者不应该修改这里的返回值，也不应该重写此虚函数。
      * @return  int
      */
-    virtual int GetAPIVersion() const { return 7; }
+    virtual int GetAPIVersion() const { return 8; }
 
     /**
      * @brief   获取插件显示项目的对象
@@ -412,6 +432,154 @@ public:
      * @return  COLORREF格式的颜色值
      */
     virtual unsigned int GetThemeColor() const = 0;
+
+    /**
+     * @brief   获取当前语言的字符串资源
+     * @param   str_id 字符串资源id
+     * @param   str_section 字符串资源在ini文件中的段名称
+     * @return 
+     */
+    virtual const wchar_t* GetStringRes(const wchar_t* key, const wchar_t* section) = 0;
+
+    /**
+     * @brief   获取主窗口的句柄
+     * @return  
+     */
+    virtual void* GetMainWindowHwnd() = 0;
+
+    /**
+     * @brief   获取任务栏窗口的句柄。不显示任务栏窗口时，返回值为空
+     * @return  
+     */
+    virtual void* GetTaskbarWindowHwnd() = 0;
+
+    /**
+     * API Version
+     *      1       新增GetMainWindowHwnd、GetTaskbarWindowHwnd函数
+     */
+};
+
+
+//插件绘图接口
+class IPluginDrawer
+{
+public:
+    /**
+     * @brief   获取此接口的版本。
+     * @return  int
+     */
+    virtual int GetAPIVersion() = 0;
+
+    // 拉伸模式
+    enum StretchMode
+    {
+        STRETCH,    /**< 拉伸，会改变比例 */
+        FILL,       /**< 填充，不改变比例，会裁剪长边 */
+        FIT         /**< 适应，不会改变比例，不裁剪 */
+    };
+
+    //对齐方式
+    enum Alignment
+    {
+        LEFT,       /**< 左对齐 */
+        RIGHT,      /**< 右对齐 */
+        CENTER,     /**< 居中 */
+    };
+
+    /**
+     * @brief   在指定的矩形区域内绘制文本
+     * @param   x 矩形区域的左侧坐标
+     * @param   y 矩形区域的顶部坐标
+     * @param   w 矩形区域的宽
+     * @param   h 矩形区域的高
+     * @param   lpszString 绘制的文本
+     * @param   color 文本的颜色，格式为0xBBGGRR
+     * @param   align 文本对齐方式
+     * @param   multi_line 是否多行显示
+     * @param   alpha 不透明度，0~255
+     */
+    virtual void DrawWindowText(int x, int y, int w, int h, const wchar_t* lpszString, unsigned long color, Alignment align = Alignment::LEFT, bool multi_line = false, unsigned char alpha = 255) = 0;
+
+    /**
+     * @brief   设置绘图剪辑区域
+     * @param   x 矩形区域的左侧坐标
+     * @param   y 矩形区域的顶部坐标
+     * @param   w 矩形区域的宽
+     * @param   h 矩形区域的高
+     */
+    virtual void SetDrawRect(int x, int y, int w, int h) = 0;
+
+    /**
+     * @brief   用纯色填充矩形
+     * @param   x 矩形区域的左侧坐标
+     * @param   y 矩形区域的顶部坐标
+     * @param   w 矩形区域的宽
+     * @param   h 矩形区域的高
+     * @param   color 填充的颜色，格式为0xBBGGRR
+     * @param   alpha 不透明度，0~255
+     */
+    virtual void FillRect(int x, int y, int w, int h, unsigned long color, unsigned char alpha = 255) = 0;
+    
+    /**
+     * @brief   绘制矩形边框
+     * @param   x 矩形区域的左侧坐标
+     * @param   y 矩形区域的顶部坐标
+     * @param   w 矩形区域的宽
+     * @param   h 矩形区域的高
+     * @param   color 边框的颜色，格式为0xBBGGRR
+     * @param   width 边框的线宽
+     * @param   dot_line 是否为虚线
+     * @param   alpha 不透明度，0~255
+     * @param   radius 圆角半径，如果为0则为直角矩形
+     */
+    virtual void DrawRectOutLine(int x, int y, int w, int h, unsigned long color, int width = 1, bool dot_line = false, unsigned char alpha = 255, int radius = 0) = 0;
+
+    /**
+     * @brief   绘制一个位图
+     * @param   hbitmap 位图的句柄
+     * @param   x 矩形区域的左侧坐标
+     * @param   y 矩形区域的顶部坐标
+     * @param   w 矩形区域的宽
+     * @param   h 矩形区域的高
+     * @param   stretch_mode 绘图的拉伸模式
+     * @param   alpha 不透明度，0~255
+     */
+    virtual void DrawBitmap(void* hbitmap, int x, int y, int w, int h, StretchMode stretch_mode = StretchMode::STRETCH, unsigned char alpha = 255) = 0;
+
+    /**
+     * @brief	绘制一个图标
+     * @param	hIcon 图标的句柄
+     * @param   x 矩形区域的左侧坐标
+     * @param   y 矩形区域的顶部坐标
+     * @param   w 矩形区域的宽
+     * @param   h 矩形区域的高
+     */
+    virtual void DrawIcon(void* hIcon, int x, int y, int w, int h) = 0;
+
+    /**
+     * @brief   计算一个字符串的的宽度和高度
+     * @param   lpszString 字符串
+     * @param[out]  w 字符串的宽度
+     * @param[out]  h 字符串的高度
+     */
+    virtual void GetTextExtent(const wchar_t* lpszString, int& w, int& h) = 0;
+
+    /**
+     * @brief   绘制一个线段
+     * @param   x1 第1个点的x坐标
+     * @param   y1 第1个点的y坐标
+     * @param   x2 第2个点的x坐标
+     * @param   y2 第2个点的7坐标
+     * @param   color 颜色
+     * @param   alpha 不透明度
+     */
+    virtual void DrawLine(int x1, int y1, int x2, int y2, unsigned long color, int width = 1, bool dot_line = false, unsigned char alpha = 255) = 0;
+
+    /**
+     * @brief   获取GDI绘图的句柄
+     * @return  HDC格式句柄
+     */
+    virtual void* GetHDC() = 0;
 };
 
 
@@ -442,5 +610,7 @@ public:
 *     6       | 新增 IPluginItem::GetResourceUsageGraphType IPluginItem::GetResourceUsageGraphValue 函数
 * -------------------------------------------------------------------------
 *     7       | 新增 ITMPlugin::OnInitialize 函数
+* -------------------------------------------------------------------------
+*     8       | 新增 IPluginItem::DrawItemEx, IPluginItem::IsDoubleLineExclusive 函数
 * -------------------------------------------------------------------------
 */
