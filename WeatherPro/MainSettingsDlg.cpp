@@ -239,7 +239,7 @@ void MainSettingsDlg::OnBnClickedButtonCheckErrorMsg()
 
 	std::wostringstream woss;
 	for (const auto &msg : WeatherPro::Instance().GetLogs()) {
-		woss << cmn::MultiByte2WideChar(msg) << "\r\n";
+		woss << cmn::MultiByte2WideChar(msg);
 	}
 
 	dlg.str_text_content = woss.str().c_str();
