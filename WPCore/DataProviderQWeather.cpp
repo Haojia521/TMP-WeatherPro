@@ -94,7 +94,7 @@ namespace
         p = std::clamp(p, 0, 4);
 
         const auto fmt_str = std::format("{{:.{}f}}{{}}", p);
-        const auto value = jvh::getReal(j_obj, "value");
+        const auto value = jvh::getNumber(j_obj, "value");
         const auto unit = jvh::getStringView(j_obj, "unit");
         return std::vformat(fmt_str, std::make_format_args(value, unit));
     }
@@ -148,6 +148,8 @@ namespace
         auto status_code = utils::internetGetWithRetry(host, path, content, params, headers);
 
         if (!content.empty()) {
+            SPDLOG_DEBUG(content);
+
             std::unique_ptr<yyjson_doc, void(*)(yyjson_doc*)> doc(
                 yyjson_read(content.c_str(), content.size(), 0),
                 [](yyjson_doc *p) { yyjson_doc_free(p); }
