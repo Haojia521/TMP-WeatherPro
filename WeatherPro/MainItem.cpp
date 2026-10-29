@@ -549,3 +549,7 @@ int MainItem::OnMouseEvent(MouseEventType type, int x, int y, void* hWnd, int fl
 
     return 0;
 }
+
+int MainItem::IsDoubleLineExclusive() const {
+    return DataManager::Instance().GetConfig().enable_dual_line_mode;
+}

@@ -17,6 +17,7 @@ public:
     int GetItemWidthEx(void* hDC) const override;
     void DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) override;
     int OnMouseEvent(MouseEventType type, int x, int y, void* hWnd, int flag) override;
+    int IsDoubleLineExclusive() const override;
 
     void SetTaskbarWndDPI(int dpi) { taskbar_wnd_dpi = dpi; }
     void SetTextAlignRight(bool flag = true) { text_align_right = flag; }
