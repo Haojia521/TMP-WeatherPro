@@ -66,6 +66,8 @@ public:
 
 	std::vector<std::string> GetLogs() const;
 
+	unsigned long item_label_color{ 0 };
+	unsigned long item_value_color{ 0 };
 private:
 	void InitPinnedItems();
 	void UpdateWeather(std::time_t ts, bool force = false, bool block_mode = false);

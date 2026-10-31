@@ -134,6 +134,9 @@ BOOL MainSettingsDlg::OnInitDialog()
 		GetDlgItem(IDC_BUTTON_VERSION)->SetWindowTextW(cmn::GetStringRes(IDS_NEW_VERSION_RELEASED));
 	}
 
+	// preview: scrollable text is disabled
+	GetDlgItem(IDC_CHECK_MAIN_ITEM_SCROLL_TEXT)->EnableWindow(FALSE);
+
 	return TRUE;  // return TRUE unless you set the focus to a control
 	// 异常: OCX 属性页应返回 FALSE
 }

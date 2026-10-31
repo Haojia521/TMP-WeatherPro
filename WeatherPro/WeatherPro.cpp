@@ -484,21 +484,21 @@ void WeatherPro::OnInitialize(ITrafficMonitor *pApp) {
 }
 
 void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
+    auto parse_data_as_int = [](const wchar_t *s) {
+        if (!s || !*s) {
+            return 0;
+        }
+
+        try {
+            return std::stoi(std::wstring{ s });
+        }
+        catch (...) {
+            return 0;
+        }
+    };
+
     if (index == ExtendedInfoIndex::EI_TASKBAR_WND_VALUE_RIGHT_ALIGN) {
-        const auto is_align_right = [](const wchar_t *s) {
-            // early return for null pointer and empty string
-            if (!s || !*s) {
-                return false;
-            }
-
-            try {
-                return std::stoi(std::wstring{ s }) > 0;
-            }
-            catch (...) {
-                return false;
-            }
-        }(data);
-
+        const auto is_align_right = parse_data_as_int(data) > 0;
         main_item.SetTextAlignRight(is_align_right);
     }
 
@@ -510,6 +510,14 @@ void WeatherPro::OnExtenedInfo(ExtendedInfoIndex index, const wchar_t* data) {
 
         current_version = GetWpVerionFromRc(GetCurrentModuleHandle());
         str_current_version = current_version.to_wstring();
+    }
+
+    if (index == ExtendedInfoIndex::EI_LABEL_TEXT_COLOR) {
+        item_label_color = static_cast<unsigned long>(parse_data_as_int(data));
+    }
+
+    if (index == ExtendedInfoIndex::EI_VALUE_TEXT_COLOR) {
+        item_value_color = static_cast<unsigned long>(parse_data_as_int(data));
     }
 }
 

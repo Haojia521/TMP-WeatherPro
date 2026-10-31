@@ -75,15 +75,30 @@ namespace
 
     using SubShteetMetaList = std::vector<SubSheetMeta>;
 
-    class CompositedIconSheet : public IconSheet
+    class IconSheetComposited : public IconSheet
     {
+    protected:
+        SubShteetMetaList sub_sheets_;
+        HBITMAP hbitmap_{ nullptr };
+        int cols_{ 0 };
+        int rows_{ 0 };
+        int margin_{ 0 };
+    
     public:
-        ~CompositedIconSheet() override {
+        ~IconSheetComposited() override {
+            TRACE("IconSheetComposited deconstructor is called.\n");
             DeleteObject(hbitmap_);
         }
 
+        IconSheetComposited() = default;
+        IconSheetComposited(const IconSheetComposited &) = delete;
+        IconSheetComposited(IconSheetComposited &&) = default;
+
+        IconSheetComposited& operator=(const IconSheetComposited &) = delete;
+        IconSheetComposited& operator=(IconSheetComposited &&) = default;
+
         bool Load(const UINT resource_id, const int cols, const int rows, const int margin,
-                  SubShteetMetaList &&sub_meta_list) {
+                  const SubShteetMetaList &sub_meta_list) {
             if (hbitmap_ != nullptr) {
                 return true;
             }
@@ -92,7 +107,7 @@ namespace
                 TRACE(L"invalid cols/rows/margin/sub_meta_list\n");
                 return false;
             }
-            
+
             const auto gdiplus_bitmap = LoadPngFromResource(resource_id);
             if (gdiplus_bitmap == nullptr) {
                 TRACE(L"failed to load png resources (id: %u)", resource_id);
@@ -129,31 +144,34 @@ namespace
             cols_ = cols;
             rows_ = rows;
             margin_ = margin;
-            sub_sheets_ = std::move(sub_meta_list);
+            sub_sheets_ = sub_meta_list;
 
             return true;
         }
 
-        bool Draw(CDC &dc, const CRect &dest_rect, int index) const override {
-            if (hbitmap_ == nullptr || index < 0 || index >= GetMaxCount())
+        bool Draw(IPluginDrawer &drawer, const CRect &dest_rect, int index) const override {
+            if (hbitmap_ == nullptr || index < 0 || index >= GetMaxCount()) {
                 return false;
+            }
 
             const int row = index / cols_;
             const int col = index % cols_;
 
-            return Draw(dc, dest_rect, row, col);
+            return Draw(drawer, dest_rect, row, col);
         }
 
-        bool Draw(CDC &dc, const CRect &dest_rect, int row, int col) const override {
+        bool Draw(IPluginDrawer &drawer, const CRect &dest_rect, int row, int col) const override {
             if (hbitmap_ == nullptr || sub_sheets_.empty()) {
                 return false;
             }
 
-            if (dest_rect.Width() <= 0 || dest_rect.Height() <= 0)
+            if (dest_rect.Width() <= 0 || dest_rect.Height() <= 0) {
                 return false;
+            }
 
-            if (row < 0 || row >= rows_ || col < 0 || col >= cols_)
+            if (row < 0 || row >= rows_ || col < 0 || col >= cols_) {
                 return false;
+            }
 
             const int target_size = std::min(dest_rect.Width(), dest_rect.Height());
             auto itr = std::ranges::upper_bound(
@@ -163,19 +181,20 @@ namespace
                 &SubSheetMeta::cell_size
             );
 
-            const auto [cell_size, offset_x, offset_y] = 
+            const auto [cell_size, offset_x, offset_y] =
                 itr == sub_sheets_.begin() ? sub_sheets_.front() : *(--itr);
 
             const int src_x = offset_x + margin_ + col * (cell_size + margin_);
             const int src_y = offset_y + margin_ + row * (cell_size + margin_);
 
-            const HDC hdc = ::CreateCompatibleDC(dc.GetSafeHdc());
+            const auto drawer_hdc = static_cast<HDC>(drawer.GetHDC());
+            const auto hdc = ::CreateCompatibleDC(drawer_hdc);
             if (!hdc)
                 return false;
 
             const HGDIOBJ oldObj = ::SelectObject(hdc, hbitmap_);
 
-            constexpr BLENDFUNCTION blend {
+            constexpr BLENDFUNCTION blend{
                 .BlendOp = AC_SRC_OVER,
                 .BlendFlags = 0,
                 .SourceConstantAlpha = 255,
@@ -183,7 +202,7 @@ namespace
             };
 
             const BOOL ok = ::AlphaBlend(
-                dc.GetSafeHdc(),
+                drawer_hdc,
                 dest_rect.left,
                 dest_rect.top,
                 dest_rect.Width(),
@@ -202,24 +221,20 @@ namespace
             return ok != FALSE;
         }
 
+        [[nodiscard]]
         int GetCols() const override {
             return cols_;
         }
 
+        [[nodiscard]]
         int GetRows() const override {
             return rows_;
         }
 
+        [[nodiscard]]
         int GetMaxCount() const override {
             return cols_ * rows_;
         }
-
-    private:
-        SubShteetMetaList sub_sheets_;
-        HBITMAP hbitmap_{ nullptr };
-        int cols_{ 0 };
-        int rows_{ 0 };
-        int margin_{ 0 };
     };
 }
 
@@ -304,7 +319,7 @@ void IconManager::LoadIconResources() {
 
     // weather icons: wcc
     {
-        const auto icons = std::make_shared<CompositedIconSheet>();
+        const auto icons = std::make_shared<IconSheetComposited>();
         icons->Load(IDB_PNG_MS_WCC, 8, 7, 4,
                     SubShteetMetaList{ SSM_C8R7M4.begin(), SSM_C8R7M4.end() });
         icon_sheets_[IconResType::WccBlue] = icons;
@@ -313,12 +328,12 @@ void IconManager::LoadIconResources() {
 
     // weather icons: qweather fill & hollow
     {
-        const auto icons_fill = std::make_shared<CompositedIconSheet>();
+        const auto icons_fill = std::make_shared<IconSheetComposited>();
         icons_fill->Load(IDB_PNG_MS_QW_FILL, 8, 8, 4,
                          SubShteetMetaList{ SSM_C8R8M4.begin(), SSM_C8R8M4.end() });
         icon_sheets_[IconResType::QWeatherFill] = icons_fill;
 
-        const auto icons_hollow = std::make_shared<CompositedIconSheet>();
+        const auto icons_hollow = std::make_shared<IconSheetComposited>();
         icons_hollow->Load(IDB_PNG_MS_QW_HOLLOW, 8, 8, 4,
                            SubShteetMetaList{ SSM_C8R8M4.begin(), SSM_C8R8M4.end() });
         icon_sheets_[IconResType::QWeatherHollow] = icons_hollow;
@@ -326,7 +341,7 @@ void IconManager::LoadIconResources() {
 
     // weather icons: open weather
     {
-        const auto icons = std::make_shared<CompositedIconSheet>();
+        const auto icons = std::make_shared<IconSheetComposited>();
         icons->Load(IDB_PNG_MS_OW, 8, 2, 4,
                     SubShteetMetaList{ SSM_C8R2M4.begin(), SSM_C8R2M4.end() });
         icon_sheets_[IconResType::OpenWeather] = icons;
@@ -334,7 +349,7 @@ void IconManager::LoadIconResources() {
 
     // loading frame icons
     {
-        const auto icons_loading = std::make_shared<CompositedIconSheet>();
+        const auto icons_loading = std::make_shared<IconSheetComposited>();
         icons_loading->Load(IDB_PNG_MS_LOADING, 8, 2, 4,
                             SubShteetMetaList{ SSM_C8R2M4.begin(), SSM_C8R2M4.end() });
         icon_sheets_[IconResType::Loading] = icons_loading;

@@ -7,13 +7,15 @@
 
 #include <afxwin.h>
 
+#include "PluginInterface.h"
+
 class IconSheet
 {
 public:
     virtual ~IconSheet() = default;
 
-    virtual bool Draw(CDC &dc, const CRect& dest_rect, int row, int col) const = 0;
-    virtual bool Draw(CDC &dc, const CRect& dest_rect, int index) const = 0;
+    virtual bool Draw(IPluginDrawer &drawer, const CRect& dest_rect, int row, int col) const = 0;
+    virtual bool Draw(IPluginDrawer &drawer, const CRect& dest_rect, int index) const = 0;
 
     [[nodiscard]] virtual int GetCols() const = 0;
     [[nodiscard]] virtual int GetRows() const = 0;
