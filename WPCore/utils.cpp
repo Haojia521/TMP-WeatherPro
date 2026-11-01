@@ -109,7 +109,7 @@ namespace utils
             if (status_code != 0) {
                 if (attempt > 1) {
                     spdlog::info("internetGetWithRetry recovered: host={}, path={}, attempt={}/{}, status={}",
-                                 host, path, attempt, max_attempts, status_code);
+                                 sanitizeHost(host), path, attempt, max_attempts, status_code);
                 }
 
                 return status_code;
@@ -126,7 +126,7 @@ namespace utils
         }
 
         spdlog::error("internetGetWithRetry exhausted: host={}, path={}, attempts={}",
-                      host, path, max_attempts);
+                      sanitizeHost(host), path, max_attempts);
         return 0;
     }
 
