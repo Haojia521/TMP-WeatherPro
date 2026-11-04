@@ -61,7 +61,7 @@ public:
 
     struct ForecastedWeather
     {
-        struct DataBlock
+        struct PeriodDetails
         {
             std::string weather_text;
             std::string weather_code;
@@ -79,9 +79,11 @@ public:
         std::string temp_max;
         std::string temp_min;
         std::string uv_index;
-        DataBlock day_time;
-        DataBlock night_time;
+        PeriodDetails day_time;
+        PeriodDetails night_time;
     };
+
+    using ForecastedWeather3Days = std::array<ForecastedWeather, 3>;
 
     struct AirQualityIndex
     {
@@ -126,8 +128,8 @@ public:
 
         RealtimeWeather realtime_weather;
         RealtimeAirQuality realtime_air_quality;
-        std::array<ForecastedWeather, 3> fc_weather_3d;
         RealtimeWeatherAlerts weather_alerts;
+        ForecastedWeather3Days fc_weather_3d;
 
         std::reference_wrapper<const ConfigFormatting> config;
     };
