@@ -16,6 +16,7 @@
 | [jwt-cpp](https://github.com/Thalhammer/jwt-cpp) | `picojson` |
 | [simpleini](https://github.com/brofield/simpleini) | — |
 | [yyjson](https://github.com/ibireme/yyjson) | — |
+| [spdlog](https://github.com/gabime/spdlog) | — |
 
 ## 一、安装依赖（vcpkg）
 
@@ -27,7 +28,8 @@
 vcpkg install cpp-httplib[openssl,zlib]:x64-windows-static ^
               jwt-cpp[picojson]:x64-windows-static ^
               simpleini:x64-windows-static ^
-              yyjson:x64-windows-static
+              yyjson:x64-windows-static ^
+              spdlog:x64-windows-static
 ```
 
 **32 位（x86）依赖（如需编译 x86 版本）：**
@@ -36,7 +38,8 @@ vcpkg install cpp-httplib[openssl,zlib]:x64-windows-static ^
 vcpkg install cpp-httplib[openssl,zlib]:x86-windows-static ^
               jwt-cpp[picojson]:x86-windows-static ^
               simpleini:x86-windows-static ^
-              yyjson:x86-windows-static
+              yyjson:x86-windows-static ^
+              spdlog:x86-windows-static
 ```
 
 ## 二、设置环境变量
