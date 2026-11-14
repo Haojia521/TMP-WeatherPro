@@ -339,6 +339,8 @@ void OptionsQwDlg::OnBnClickedButtonCreateKeyPair()
 		}
 	}
 
+	UpdateData(TRUE);
+
 	str_jwt_pub_key_filepath = pub_key_filepath.c_str();
 	str_jwt_prv_key_filepath = prv_key_filepath.c_str();
 
@@ -359,6 +361,8 @@ void OptionsQwDlg::OnBnClickedButtonSelectKeyPair()
 
 	namespace fs = std::filesystem;
 	if (fs::exists(pub_key_filepath) && fs::exists(prv_key_filepath)) {
+	    UpdateData(TRUE);
+
 		str_jwt_pub_key_filepath = pub_key_filepath.c_str();
 		str_jwt_prv_key_filepath = prv_key_filepath.c_str();
 
