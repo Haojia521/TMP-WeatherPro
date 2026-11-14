@@ -23,22 +23,48 @@ namespace
 
     std::mutex mutex_gen_jwt;
 
-    std::string generateJwt(const DataProviderQWeather::ConfigApp &cfg) {
+    using ConfigApp = DataProviderQWeather::ConfigApp;
+
+    struct JwtAuthorizationData
+    {
+        JwtAuthorizationData() = default;
+        explicit JwtAuthorizationData(const ConfigApp &cfg) {
+            developer_id = cfg.developer_id;
+            project_id = cfg.project_id;
+            credential_id = cfg.credential_id;
+            jwt_prv_key_file = cfg.jwt_prv_key_file;
+        }
+
+        std::string developer_id;
+        std::string project_id;
+        std::string credential_id;
+        std::string jwt_prv_key_file;
+    };
+
+    bool isJwtAuthorizationDataChanged(const ConfigApp &cfg, const JwtAuthorizationData &jwt_auth_data) {
+        return cfg.developer_id != jwt_auth_data.developer_id
+            || cfg.project_id != jwt_auth_data.project_id
+            || cfg.credential_id != jwt_auth_data.credential_id
+            || cfg.jwt_prv_key_file != jwt_auth_data.jwt_prv_key_file;
+    }
+
+    std::string generateJwt(const ConfigApp &cfg) {
         static std::chrono::system_clock::time_point timestamp;
         static std::string token_cache;
-        static std::string prv_filepath_cache;
+        //static std::string prv_filepath_cache;
+        static JwtAuthorizationData jwt_auth_data_cache;
 
         std::scoped_lock lock{ mutex_gen_jwt };
 
         const auto now = std::chrono::system_clock::now();
 
-        if (prv_filepath_cache == cfg.jwt_prv_key_file &&
+        if (!isJwtAuthorizationDataChanged(cfg, jwt_auth_data_cache) &&
             (now < timestamp + JWT_TIME_DURATION - JWT_TIME_OFFSET) && 
             !token_cache.empty()) {
             return token_cache;
         }
 
-        prv_filepath_cache = cfg.jwt_prv_key_file;
+        jwt_auth_data_cache = JwtAuthorizationData{ cfg };
 
         std::ifstream ifs(cfg.jwt_prv_key_file);
 
@@ -73,7 +99,6 @@ namespace
         return token_cache;
     }
 
-    using ConfigApp = DataProviderQWeather::ConfigApp;
     using ConfigFmt = DataProviderQWeather::ConfigFormatting;
     using RealtimeWeather = DataProviderQWeather::RealtimeWeather;
     using ForecastedWeather = DataProviderQWeather::ForecastedWeather;
