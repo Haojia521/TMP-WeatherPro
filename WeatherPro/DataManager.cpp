@@ -4,6 +4,7 @@
 #include "Common.h"
 
 #include <atomic>
+#include <chrono>
 #include <filesystem>
 #include <mutex>
 #include <thread>
@@ -279,8 +280,15 @@ namespace
             return L"";
         }
 
+        [[nodiscard]]
+        int64_t GetStampNumber() const override {
+            return stamp_number;
+        }
+
         WeatherCacheMap cache_map;
         std::wstring tooltip_text;
+
+        int64_t stamp_number{ 0 };
     };
 
     std::atomic<std::shared_ptr<SnapshotImpl>> cache_snapshot;
@@ -450,7 +458,7 @@ void DataManager::ProceedUpdate() {
         spdlog::info("successfully located at the position: name={}, lon={}, lat={}, adm={}",
                      loc.name, loc.longitude, loc.latitude,loc.administrative_ownership);
 
-        current_loc_ = loc;
+        current_loc_ = std::move(loc);
 
         // disable auto-locating if locating-once option is set
         if (config_.flag_locating_once) {
@@ -513,6 +521,10 @@ void DataManager::RefreshCache() const {
         new_snapshot->tooltip_text = std::format(
             L"{} {}", FormatLocation(current_loc_, config_.format_geo_coords_in_summary), summary_wstr
         );
+
+        // set stamp number
+        new_snapshot->stamp_number = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
     }
 
     cache_snapshot.store(new_snapshot, std::memory_order_release);

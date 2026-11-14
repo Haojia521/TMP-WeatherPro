@@ -436,13 +436,35 @@ const wchar_t* WeatherPro::GetInfo(PluginInfoIndex index) {
 }
 
 const wchar_t* WeatherPro::GetTooltipInfo() {
-    if (const auto &data_snapshot = DataManager::GetSnapshot();
-        DataManager::Instance().GetConfig().show_weather_in_tooltip &&
-        data_snapshot != nullptr) {
-        return data_snapshot->GetTooltipText();
+    // 此函数只被宿主单线程调用，所以没有加锁
+
+    static std::wstring buffer;
+    static int64_t cached_stamp{ -1 };
+
+    const auto& cfg = DataManager::Instance().GetConfig();
+    const auto snap = DataManager::GetSnapshot();
+    if (!cfg.show_weather_in_tooltip || !snap) {
+        buffer.clear();
+        return L"";
     }
 
-    return L"";
+    if (const int64_t stamp = snap->GetStampNumber(); stamp != cached_stamp) {
+        constexpr std::size_t MAX_INFO_LEN{ 960 };
+
+        const wchar_t* info = snap->GetTooltipText();
+        buffer.assign(info ? info : L"",
+                      std::min<std::size_t>(info ? std::wcslen(info) : 0, MAX_INFO_LEN - 1));
+        cached_stamp = stamp;
+
+        if (HasNewVersionWpPackage()) [[unlikely]] {
+            buffer.append(
+                std::format(L"WeatherPro {} <{}>\n", 
+                            cmn::GetStringRes(IDS_NEW_VERSION_RELEASED).GetString(), 
+                            latest_package.version.to_wstring()));
+        }
+    }
+
+    return buffer.c_str();
 }
 
 void WeatherPro::OnInitialize(ITrafficMonitor *pApp) {

@@ -59,6 +59,8 @@ public:
     {
         virtual ~Snapshot() = default;
 
+        [[nodiscard]] virtual int64_t GetStampNumber() const = 0;
+
         [[nodiscard]] virtual const wchar_t* GetTooltipText() const = 0;
         [[nodiscard]] virtual const wchar_t* GetWeatherItem(WeatherTimeSlot time_slot, WeatherItem item) const = 0;
     };
