@@ -28,6 +28,10 @@ namespace utils
         std::string_view lookupTextByCode(const std::unordered_map<std::string_view, tr::TID> &code_tid_map,
                                           const std::string_view code,
                                           const std::string_view func_name) {
+            if (code.empty()) {
+                return {};
+            }
+
             std::string lower_code{ code };
             std::ranges::transform(code, std::begin(lower_code),
                                    [](const unsigned char c) { return static_cast<char>(std::tolower(c)); });
@@ -76,7 +80,7 @@ namespace utils
         if (res) {
             if (res->status >= 400) {
                 spdlog::warn("internetGet: HTTP {}, host={}, path={}",
-                             res->status, host, path);
+                             res->status, sanitizeHost(host), path);
             }
 
             content = std::move(res->body);
@@ -116,7 +120,7 @@ namespace utils
             }
 
             spdlog::warn("internetGetWithRetry: attempt {}/{} failed, host={}, path={}",
-                         attempt, max_attempts, host, path);
+                         attempt, max_attempts, sanitizeHost(host), path);
 
             if (attempt == max_attempts) {
                 break;
