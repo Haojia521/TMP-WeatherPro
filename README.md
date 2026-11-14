@@ -27,6 +27,7 @@ WeatherPro 是一款为 [TrafficMonitor](https://github.com/zhongyang219/Traffic
   - [修复] 返回给宿主的提示信息字符串指针可能失效
   - [修复] 和风天气设置界面，创建或导入密钥时丢失界面还未保存的文本信息
   - [修复] 修改和风天气认证信息后，没有立即刷新缓存JWT
+  - [修复] 中文语言下openweather错误显示英文风向
 
 - v1.4.0
 
