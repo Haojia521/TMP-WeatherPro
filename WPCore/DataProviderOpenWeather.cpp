@@ -76,15 +76,18 @@ namespace
         return "℃";
     }
 
-    const std::string& getWindDirectionText(int deg) {
-        const static std::array<std::string, 8> directions = {
+    std::string getWindDirectionText(int deg) {
+        constexpr std::array<std::string_view, 8> compass_codes = {
             "N", "NE", "E", "SE", "S", "SW", "W", "NW"
         };
 
         const int normalized = ((deg % 360) + 360) % 360;
         const int index = static_cast<int>((normalized + 22.5) / 45.0) % 8;
 
-        return directions[index];
+        auto direction = utils::get_direction_text(compass_codes[index]);
+
+        return std::vformat(tr::txt(tr::TID::FMT_TMP_WIND_DIRECTION),
+                            std::make_format_args(direction));
     }
 
     bool queryFrame(std::string_view path, utils::HttpParams &params, const std::string &app_id,
@@ -561,7 +564,9 @@ std::string DataProviderOpenWeather::WeatherDataBlock::getWeatherSummary() const
         << "(" << realtime_weather.update_time << ")";
 
     // wind
-    oss << "\n" << getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::WIND);
+    auto wind_direction_speed = getWeatherItem(WeatherTimeSlot::REALTIME, WeatherItem::WIND);
+    oss << "\n" << std::vformat(tr::txt(tr::TID::FMT_TMP_WIND),
+                                std::make_format_args(wind_direction_speed));
 
     // humidity
     oss << std::format(" {}: {}", tr::txt(tr::TID::FMT_HUMIDITY),
