@@ -83,6 +83,37 @@ namespace
     using WeatherAlert = DataProviderQWeather::WeatherAlert;
     using RealtimeWeatherAlerts = DataProviderQWeather::RealtimeWeatherAlerts;
 
+    std::string_view getNightVersionWeatherCode(std::string_view code) {
+        static const std::unordered_map<std::string_view, std::string_view> day_to_night_code_map{
+            {"100", "150"}, {"101", "151"}, {"102", "152"}, {"103", "153"},
+            {"300", "350"}, {"301", "351"}, {"406", "456"}, {"407", "457"},
+        };
+
+        if (day_to_night_code_map.contains(code)) {
+            return day_to_night_code_map.at(code);
+        }
+
+        return code;
+    }
+
+    bool isDaytime() {
+        using namespace std::chrono;
+        using namespace std::chrono_literals;
+
+        const auto local = current_zone()->to_local(system_clock::now());
+        const auto h = std::chrono::floor<hours>(local).time_since_epoch() % 24h;
+
+        return h >= 7h && h < 19h;
+    }
+
+    std::string_view transformToNightWeatherCode(std::string_view code, bool according_to_real_time) {
+        if (according_to_real_time && isDaytime()) {
+            return code;
+        }
+
+        return getNightVersionWeatherCode(code);
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// format data string
 
@@ -190,7 +221,7 @@ namespace
         // weather condition
         auto *j_weather = yyjson_obj_get(j_root, "condition");
         rt_weather.weather_text = jvh::getStringView(j_weather, "text");
-        rt_weather.weather_code = jvh::getStringView(j_weather, "code");
+        rt_weather.weather_code = transformToNightWeatherCode(jvh::getStringView(j_weather, "code"), true);
 
         // wind
         auto *j_wind = yyjson_obj_get(j_root, "wind");
@@ -295,6 +326,7 @@ namespace
         // night time
         auto *j_night = yyjson_obj_get(j_daily, "nighttime");
         parseForecastWeather(j_night, fc_weather.night_time);
+        fc_weather.night_time.weather_code = transformToNightWeatherCode(fc_weather.night_time.weather_code, false);
     }
 
     void parseForecastWeather(yyjson_val *j_root, ForecastedWeather3Days &fc_weather_3d) {
