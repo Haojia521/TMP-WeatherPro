@@ -95,6 +95,7 @@ public:
         bool auto_locating{ false };
         bool draw_alerts_notification_dot{ true };
         bool main_item_scroll_text{ true };
+        bool main_item_keep_compact{ true };
         bool format_geo_coords_in_summary{ true };
         bool enable_dual_line_mode{ true };
 

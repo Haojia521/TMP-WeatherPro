@@ -480,13 +480,19 @@ int MainItem::GetItemWidth() const {
 }
 
 int MainItem::GetItemWidthEx(void* hDC) const {
-    if (const auto &cfg = DataManager::Instance().GetConfig();
-        !cfg.main_item_scroll_text) {
+    const auto &cfg = DataManager::Instance().GetConfig();
+
+    if (!cfg.main_item_scroll_text) {
         return real_width;
     }
     
-    auto max_width = CalcPixelSize(taskbar_wnd_dpi, GetItemWidth());
-    return std::min(max_width, real_width);
+    const auto max_width = CalcPixelSize(taskbar_wnd_dpi, GetItemWidth());
+
+    if (cfg.main_item_keep_compact) {
+        return std::min(max_width, real_width);
+    }
+
+    return max_width;
 }
 
 void MainItem::DrawItem(void* hDC, int x, int y, int w, int h, bool dark_mode) {

@@ -16,39 +16,40 @@ namespace fs = std::filesystem;
 
 namespace
 {
+    constexpr std::wstring_view WSV_ACTIVE_AUTO_LOCATING{ L"auto_locating" };
+    constexpr std::wstring_view WSV_API_OPENWEATHER{ L"api_openweather" };
+    constexpr std::wstring_view WSV_API_QWEATHER{ L"api_qweather" };
+    constexpr std::wstring_view WSV_API_TYPE{ L"api_type" };
+    constexpr std::wstring_view WSV_API_WCC{ L"api_weather.com.cn" };
+    constexpr std::wstring_view WSV_AUTO_LOCATING_SOURCE{ L"auto_locating_source" };
     constexpr std::wstring_view WSV_CONFIG_FILENAME{ L"WeatherPro.ini" };
-    constexpr std::wstring_view WSV_WEATHER_PRO{ L"weatherpro" };
-    constexpr std::wstring_view WSV_TIME_SLOT{ L"time_slot" };
-    constexpr std::wstring_view WSV_REALTIME{ L"realtime" };
-    constexpr std::wstring_view WSV_TODAY{ L"today" };
-    constexpr std::wstring_view WSV_TOMORROW{ L"tomorrow" };
     constexpr std::wstring_view WSV_DAY_AFTER_TOMORROW{ L"day_after_tomorrow" };
-    constexpr std::wstring_view WSV_UPDATE_INTERVAL{ L"update_interval" };
+    constexpr std::wstring_view WSV_DRAW_ALERTS_NOTIFICATION_DOT{ L"draw_alerts_notification_dot" };
+    constexpr std::wstring_view WSV_DRAW_WEATHER_ICON{ L"draw_weather_icon" };
+    constexpr std::wstring_view WSV_ENABLE_DUAL_LINE_MODE{ L"enable_dual_line_mode" };
+    constexpr std::wstring_view WSV_FORMAT_GEO_COORDS_IN_SUMMARY{ L"format_geo_coords_in_summary" };
+    constexpr std::wstring_view WSV_L_DOUBLE_CLICK_ACTION{ L"l_double_click_action" };
+    constexpr std::wstring_view WSV_LOC_LONGITUDE{ L"loc_longitude" };
+    constexpr std::wstring_view WSV_LOC_LATITUDE{ L"loc_latitude" };
+    constexpr std::wstring_view WSV_LOCATION_ID{ L"location_id" };
+    constexpr std::wstring_view WSV_LOCATION_NAME{ L"location_name" };
+    constexpr std::wstring_view WSV_MAIN_ITEM_KEEP_COMPACT{ L"main_item_keep_compact" };
+    constexpr std::wstring_view WSV_MAIN_ITEM_SCROLL_TEXT{ L"main_item_scroll_text" };
     constexpr std::wstring_view WSV_MINUTES_5{ L"5min" };
     constexpr std::wstring_view WSV_MINUTES_15{ L"15min" };
     constexpr std::wstring_view WSV_MINUTES_30{ L"30min" };
     constexpr std::wstring_view WSV_MINUTES_60{ L"60min" };
     constexpr std::wstring_view WSV_MINUTES_120{ L"120min" };
-    constexpr std::wstring_view WSV_L_DOUBLE_CLICK_ACTION{ L"l_double_click_action" };
-    constexpr std::wstring_view WSV_UPDATE_WEATHER{ L"update_weather" };
     constexpr std::wstring_view WSV_OPEN_SETTINGS{ L"open_settings" };
-    constexpr std::wstring_view WSV_SHOW_WEATHER_IN_TOOLTIP{ L"show_weather_in_tooltip" };
-    constexpr std::wstring_view WSV_DRAW_WEATHER_ICON{ L"draw_weather_icon" };
-    constexpr std::wstring_view WSV_ACTIVE_AUTO_LOCATING{ L"auto_locating" };
-    constexpr std::wstring_view WSV_API_TYPE{ L"api_type" };
-    constexpr std::wstring_view WSV_API_WCC{ L"api_weather.com.cn" };
-    constexpr std::wstring_view WSV_API_QWEATHER{ L"api_qweather" };
-    constexpr std::wstring_view WSV_API_OPENWEATHER{ L"api_openweather" };
-    constexpr std::wstring_view WSV_LOCATION_ID{ L"location_id" };
-    constexpr std::wstring_view WSV_LOCATION_NAME{ L"location_name" };
-    constexpr std::wstring_view WSV_LOC_LONGITUDE{ L"loc_longitude" };
-    constexpr std::wstring_view WSV_LOC_LATITUDE{ L"loc_latitude" };
-    constexpr std::wstring_view WSV_AUTO_LOCATING_SOURCE{ L"auto_locating_source" };
-    constexpr std::wstring_view WSV_DRAW_ALERTS_NOTIFICATION_DOT{ L"draw_alerts_notification_dot" };
     constexpr std::wstring_view WSV_PINNED_ITEM_DATA_KEYS{ L"pinned_item_data_keys" };
-    constexpr std::wstring_view WSV_MAIN_ITEM_SCROLL_TEXT{ L"main_item_scroll_text" };
-    constexpr std::wstring_view WSV_FORMAT_GEO_COORDS_IN_SUMMARY{ L"format_geo_coords_in_summary" };
-    constexpr std::wstring_view WSV_ENABLE_DUAL_LINE_MODE{ L"enable_dual_line_mode" };
+    constexpr std::wstring_view WSV_REALTIME{ L"realtime" };
+    constexpr std::wstring_view WSV_SHOW_WEATHER_IN_TOOLTIP{ L"show_weather_in_tooltip" };
+    constexpr std::wstring_view WSV_TIME_SLOT{ L"time_slot" };
+    constexpr std::wstring_view WSV_TODAY{ L"today" };
+    constexpr std::wstring_view WSV_TOMORROW{ L"tomorrow" };
+    constexpr std::wstring_view WSV_UPDATE_INTERVAL{ L"update_interval" };
+    constexpr std::wstring_view WSV_UPDATE_WEATHER{ L"update_weather" };
+    constexpr std::wstring_view WSV_WEATHER_PRO{ L"weatherpro" };
 
     template<typename ENM_T, typename STR_T>
     struct EnumStrMappingItem
@@ -371,6 +372,7 @@ void DataManager::LoadConfigs(std::wstring_view cfg_dir) {
     config_.auto_locating = ini_helper.GetBool(WSV_ACTIVE_AUTO_LOCATING);
     config_.draw_alerts_notification_dot = ini_helper.GetBool(WSV_DRAW_ALERTS_NOTIFICATION_DOT, true);
     config_.main_item_scroll_text = ini_helper.GetBool(WSV_MAIN_ITEM_SCROLL_TEXT, true);
+    config_.main_item_keep_compact = ini_helper.GetBool(WSV_MAIN_ITEM_KEEP_COMPACT, true);
     config_.format_geo_coords_in_summary = ini_helper.GetBool(WSV_FORMAT_GEO_COORDS_IN_SUMMARY, true);
     config_.enable_dual_line_mode = ini_helper.GetBool(WSV_ENABLE_DUAL_LINE_MODE, true);
 
@@ -401,6 +403,7 @@ void DataManager::SaveConfigs() const {
     ini_helper.SetBool(WSV_ACTIVE_AUTO_LOCATING, config_.auto_locating);
     ini_helper.SetBool(WSV_DRAW_ALERTS_NOTIFICATION_DOT, config_.draw_alerts_notification_dot);
     ini_helper.SetBool(WSV_MAIN_ITEM_SCROLL_TEXT, config_.main_item_scroll_text);
+    ini_helper.SetBool(WSV_MAIN_ITEM_KEEP_COMPACT, config_.main_item_keep_compact);
     ini_helper.SetBool(WSV_FORMAT_GEO_COORDS_IN_SUMMARY, config_.format_geo_coords_in_summary);
     ini_helper.SetBool(WSV_ENABLE_DUAL_LINE_MODE, config_.enable_dual_line_mode);
 

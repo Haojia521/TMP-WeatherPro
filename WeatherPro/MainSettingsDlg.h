@@ -33,6 +33,7 @@ protected:
 	BOOL bool_draw_icon;
 	BOOL bool_draw_alerts_notification_dot;
 	BOOL bool_main_item_scroll_text;
+	BOOL bool_main_item_keep_compact;
 	BOOL bool_show_geo_coords_in_summary;
 	BOOL bool_enable_dual_line_mode;
 	BOOL bool_locating_once;
@@ -55,4 +56,5 @@ public:
 	afx_msg void OnBnClickedButtonDonate();
 	afx_msg void OnBnClickedButtonSetPinnedItems();
 	afx_msg void OnBnClickedButtonVersion();
+	afx_msg void OnBnClickedCheckMainItemScrollText();
 };

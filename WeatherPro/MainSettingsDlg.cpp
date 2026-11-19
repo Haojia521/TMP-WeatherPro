@@ -30,6 +30,7 @@ MainSettingsDlg::MainSettingsDlg(CWnd* pParent /*=nullptr*/)
 	, bool_draw_icon(FALSE)
 	, bool_draw_alerts_notification_dot(FALSE)
 	, bool_main_item_scroll_text(FALSE)
+	, bool_main_item_keep_compact(FALSE)
 	, bool_show_geo_coords_in_summary(FALSE)
 	, bool_enable_dual_line_mode(FALSE)
 	, bool_locating_once(FALSE)
@@ -59,6 +60,7 @@ void MainSettingsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHECK_SHOW_GEO_COORDS_IN_SUMMARY, bool_show_geo_coords_in_summary);
 	DDX_Check(pDX, IDC_CHECK_DUAL_LINE_MODE, bool_enable_dual_line_mode);
 	DDX_Check(pDX, IDC_CHECK_LOCATING_ONCE, bool_locating_once);
+	DDX_Check(pDX, IDC_CHECK_FIXED_WIDTH_KEEP_COMPACT, bool_main_item_keep_compact);
 }
 
 
@@ -72,6 +74,7 @@ BEGIN_MESSAGE_MAP(MainSettingsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_DONATE, &MainSettingsDlg::OnBnClickedButtonDonate)
 	ON_BN_CLICKED(IDC_BUTTON_SET_PINNED_ITEMS, &MainSettingsDlg::OnBnClickedButtonSetPinnedItems)
 	ON_BN_CLICKED(IDC_BUTTON_VERSION, &MainSettingsDlg::OnBnClickedButtonVersion)
+	ON_BN_CLICKED(IDC_CHECK_MAIN_ITEM_SCROLL_TEXT, &MainSettingsDlg::OnBnClickedCheckMainItemScrollText)
 END_MESSAGE_MAP()
 
 
@@ -116,6 +119,8 @@ BOOL MainSettingsDlg::OnInitDialog()
 	bool_draw_icon = cfg.draw_weather_icon ? TRUE : FALSE;
 	bool_draw_alerts_notification_dot = cfg.draw_alerts_notification_dot ? TRUE : FALSE;
 	bool_main_item_scroll_text = cfg.main_item_scroll_text ? TRUE : FALSE;
+	bool_main_item_keep_compact = cfg.main_item_keep_compact ? TRUE : FALSE;
+	GetDlgItem(IDC_CHECK_FIXED_WIDTH_KEEP_COMPACT)->EnableWindow(bool_main_item_scroll_text);
 	bool_show_geo_coords_in_summary = cfg.format_geo_coords_in_summary ? TRUE : FALSE;
 	bool_enable_dual_line_mode = cfg.enable_dual_line_mode ? TRUE : FALSE;
 
@@ -158,6 +163,7 @@ DataManager::Config MainSettingsDlg::GetConfigsFromUI() {
 	cfg.draw_weather_icon = bool_draw_icon == TRUE;
 	cfg.draw_alerts_notification_dot = bool_draw_alerts_notification_dot == TRUE;
 	cfg.main_item_scroll_text = bool_main_item_scroll_text == TRUE;
+	cfg.main_item_keep_compact = bool_main_item_keep_compact == TRUE;
 	cfg.format_geo_coords_in_summary = bool_show_geo_coords_in_summary == TRUE;
 	cfg.enable_dual_line_mode = bool_enable_dual_line_mode == TRUE;
 	cfg.auto_locating_src = old_cfg.auto_locating_src;
@@ -360,4 +366,11 @@ void MainSettingsDlg::OnBnClickedButtonVersion()
 		msg.Format(msg_template, current_version.to_wstring().c_str());
 		MessageBoxW(msg, cmn::GetStringRes(IDS_CHECK_NEW_VERSION), MB_OK);
 	}
+}
+
+void MainSettingsDlg::OnBnClickedCheckMainItemScrollText()
+{
+	UpdateData(TRUE);
+
+	GetDlgItem(IDC_CHECK_FIXED_WIDTH_KEEP_COMPACT)->EnableWindow(bool_main_item_scroll_text);
 }
